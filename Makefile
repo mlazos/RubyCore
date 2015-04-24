@@ -17,7 +17,7 @@ top_srcdir = $(srcdir)
 hdrdir = $(srcdir)/include
 PLATFORM_DIR = 
 
-CC = gcc
+CC = clang
 CPP = $(CC) -E
 LD = ld
 YACC = bison
@@ -29,7 +29,7 @@ BASERUBY = ruby --disable=gems
 HAVE_BASERUBY = yes
 TEST_RUNNABLE = yes
 CROSS_COMPILING = no
-DOXYGEN = doxygen
+DOXYGEN = 
 
 prefix = /usr/local
 exec_prefix = ${prefix}
@@ -39,7 +39,7 @@ libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 datarootdir = ${prefix}/share
 datadir = ${datarootdir}
-arch = x86_64-linux
+arch = x86_64-darwin14
 sitearch = ${arch}
 sitedir = ${rubylibprefix}/site_ruby
 archlibdir = ${libdir}/${arch}
@@ -59,25 +59,25 @@ CC_VERSION = $(CC) -v
 OUTFLAG = -o $(empty)
 COUTFLAG = -o $(empty)
 ARCH_FLAG = 
-CFLAGS_NO_ARCH = ${cflags}
+CFLAGS_NO_ARCH = ${cflags}  -pipe
 CFLAGS = $(CFLAGS_NO_ARCH) $(ARCH_FLAG)
 cflags =  ${optflags} ${debugflags} ${warnflags}
 optflags = -O3 -fno-fast-math
 debugflags = -ggdb3
-warnflags = -Wall -Wextra -Wno-unused-parameter -Wno-parentheses -Wno-long-long -Wno-missing-field-initializers -Wunused-variable -Wpointer-arith -Wwrite-strings -Wdeclaration-after-statement -Wimplicit-function-declaration -Wdeprecated-declarations -Wno-packed-bitfield-compat -std=iso9899:1999
+warnflags = -Wall -Wextra -Wno-unused-parameter -Wno-parentheses -Wno-long-long -Wno-missing-field-initializers -Wunused-variable -Wpointer-arith -Wwrite-strings -Wdeclaration-after-statement -Wshorten-64-to-32 -Wimplicit-function-declaration -Wdivision-by-zero -Wdeprecated-declarations -Wextra-tokens 
 cppflags = 
 INCFLAGS = -I. -I$(arch_hdrdir) -I$(hdrdir) -I$(srcdir)
 XCFLAGS = -D_FORTIFY_SOURCE=2 -fstack-protector -fno-strict-overflow -fvisibility=hidden -DRUBY_EXPORT -fPIE
-CPPFLAGS =  $(DEFS) ${cppflags} $(INCFLAGS)
-LDFLAGS =  $(CFLAGS) -L. -fstack-protector -rdynamic -Wl,-export-dynamic
+CPPFLAGS = -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT $(DEFS) ${cppflags} $(INCFLAGS)
+LDFLAGS =  $(CFLAGS) -L. -fstack-protector
 EXTLDFLAGS = 
-XLDFLAGS = -fstack-protector -pie $(EXTLDFLAGS)
+XLDFLAGS = -fstack-protector -Wl,-u,_objc_msgSend -Wl,-pie -framework CoreFoundation $(EXTLDFLAGS)
 EXTLIBS =
-LIBS = -lpthread -lrt -lgmp -ldl -lcrypt -lm  $(EXTLIBS)
-MISSING =  ${LIBOBJDIR}setproctitle.o ${LIBOBJDIR}strlcat.o ${LIBOBJDIR}strlcpy.o ${LIBOBJDIR}addr2line.o 
-LDSHARED = $(CC) -shared
-DLDFLAGS =  $(XLDFLAGS) $(ARCH_FLAG)
-SOLIBS = -lgmp 
+LIBS = -lpthread -ldl -lobjc $(EXTLIBS)
+MISSING =  ${LIBOBJDIR}setproctitle.o 
+LDSHARED = $(CC) -dynamic -bundle
+DLDFLAGS = -Wl,-undefined,dynamic_lookup -Wl,-multiply_defined,suppress $(XLDFLAGS) $(ARCH_FLAG)
+SOLIBS = 
 MAINLIBS = 
 ARCHMINIOBJS = dmydln.o
 DLNOBJ = dln.o
@@ -86,7 +86,7 @@ EXTOBJS = dmyext.$(OBJEXT)
 BUILTIN_ENCOBJS =  ascii.$(OBJEXT) us_ascii.$(OBJEXT) unicode.$(OBJEXT) utf_8.$(OBJEXT)
 BUILTIN_TRANSSRCS =  newline.c
 BUILTIN_TRANSOBJS =  newline.$(OBJEXT)
-POSTLINK = :
+POSTLINK = test -z '$(RUBY_CODESIGN)' || codesign -s '$(RUBY_CODESIGN)' -f $@
 
 RUBY_BASE_NAME=ruby
 RUBY_PROGRAM_VERSION=2.2.2
@@ -126,8 +126,8 @@ LIBRUBY_SO    = lib$(RUBY_SO_NAME).so.$(MAJOR).$(MINOR).$(TEENY)
 LIBRUBY_ALIASES= lib$(RUBY_SO_NAME).so
 LIBRUBY	      = $(LIBRUBY_A)
 LIBRUBYARG    = $(LIBRUBYARG_STATIC)
-LIBRUBYARG_STATIC = -Wl,-R$(libdir) -L$(libdir) -l$(RUBY_SO_NAME)-static
-LIBRUBYARG_SHARED = -Wl,-R$(libdir) -L$(libdir) 
+LIBRUBYARG_STATIC = -l$(RUBY_SO_NAME)-static -framework CoreFoundation
+LIBRUBYARG_SHARED = 
 LIBRUBY_RELATIVE = no
 LIBRUBY_A_OBJS = $(OBJS)
 
@@ -153,12 +153,12 @@ EXTSTATIC     =
 ENCSTATIC     = 
 SET_LC_MESSAGES = env LC_MESSAGES=C
 
-MAKEDIRS      = /bin/mkdir -p
+MAKEDIRS      = mkdir -p
 CP            = cp
 MV            = mv
 RM            = rm -f
-RMDIR         = rmdir --ignore-fail-on-non-empty
-RMDIRS        = rmdir --ignore-fail-on-non-empty -p
+RMDIR         = rmdir
+RMDIRS        = rmdir -p
 RMALL         = rm -fr
 NM            = nm
 AR            = ar
@@ -168,21 +168,21 @@ AS            = as
 ASFLAGS       =  $(INCFLAGS)
 IFCHANGE      = $(srcdir)/tool/ifchange
 SET_LC_MESSAGES = env LC_MESSAGES=C
-OBJDUMP       = objdump
+OBJDUMP       = 
 OBJCOPY       = :
 VCS           = git
 VCSUP         = $(VCS) pull $(GITPULLOPTIONS)
-DTRACE        = 
-DTRACE_EXT    = dmyh
+DTRACE        = dtrace
+DTRACE_EXT    = d
 DTRACE_OBJ    = 
 DTRACE_REBUILD= 
 DTRACE_GLOMMED_OBJ = $(DTRACE_REBUILD:yes=ruby-glommed.$(OBJEXT))
 
 OBJEXT        = o
 ASMEXT        = S
-DLEXT         = so
+DLEXT         = bundle
 MANTYPE	      = doc
-SYMBOL_PREFIX = 
+SYMBOL_PREFIX = _
 
 INSTALLED_LIST= .installed.list
 
@@ -199,7 +199,7 @@ OS_DEST_FILE  = $@
 MESSAGE_BEGIN = @for line in
 MESSAGE_END = ; do echo "$$line"; done
 ECHO_BEGIN = @sep=''; for word in
-ECHO_END = ; do echo -n "$$sep'$$word'"; sep=' '; done; echo
+ECHO_END = ; do echo  "$$sep'$$word'\c"; sep=' '; done; echo
 
 DESTDIR       = 
 

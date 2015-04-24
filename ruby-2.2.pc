@@ -1,4 +1,4 @@
-arch=x86_64-linux
+arch=x86_64-darwin14
 sitearch=${arch}
 prefix=/usr/local
 exec_prefix=${prefix}
@@ -41,11 +41,11 @@ LIBPATH=
 LIBRUBY_A=lib${RUBY_SO_NAME}-static.a
 LIBRUBY_SO=lib${RUBY_SO_NAME}.so.${MAJOR}.${MINOR}.${TEENY}
 LIBRUBY=${LIBRUBY_A}
-LIBRUBYARG_SHARED=-Wl,-R${libdir} -L${libdir} 
-LIBRUBYARG_STATIC=-Wl,-R${libdir} -L${libdir} -l${RUBY_SO_NAME}-static
+LIBRUBYARG_SHARED=
+LIBRUBYARG_STATIC=-l${RUBY_SO_NAME}-static -framework CoreFoundation
 LIBRUBYARG=${LIBRUBYARG_STATIC}
-LIBS=-lpthread -lrt -lgmp -ldl -lcrypt -lm 
-DLDFLAGS=
+LIBS=-lpthread -ldl -lobjc
+DLDFLAGS=-Wl,-undefined,dynamic_lookup -Wl,-multiply_defined,suppress
 
 Name: Ruby
 Description: Object Oriented Script Language

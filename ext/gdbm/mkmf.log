@@ -1,0 +1,51 @@
+have_library: checking for gdbm_open() in -lgdbm... -------------------- no
+
+"clang -o conftest -I../../.ext/include/x86_64-darwin14 -I../.././include -I../.././ext/gdbm -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT    -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wno-unused-parameter -Wno-parentheses -Wno-long-long -Wno-missing-field-initializers -Wunused-variable -Wpointer-arith -Wwrite-strings -Wdeclaration-after-statement -Wshorten-64-to-32 -Wimplicit-function-declaration -Wdivision-by-zero -Wdeprecated-declarations -Wextra-tokens  -pipe conftest.c  -L. -L../.. -L. -fstack-protector     -lruby-static -framework CoreFoundation -lgdbm  -lpthread -ldl -lobjc "
+conftest.c:13:57: error: use of undeclared identifier 'gdbm_open'
+int t(void) { void ((*volatile p)()); p = (void ((*)()))gdbm_open; return 0; }
+                                                        ^
+1 error generated.
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: /*top*/
+ 4: extern int t(void);
+ 5: int main(int argc, char **argv)
+ 6: {
+ 7:   if (argc > 1000000) {
+ 8:     printf("%p", &t);
+ 9:   }
+10: 
+11:   return 0;
+12: }
+13: int t(void) { void ((*volatile p)()); p = (void ((*)()))gdbm_open; return 0; }
+/* end */
+
+"clang -o conftest -I../../.ext/include/x86_64-darwin14 -I../.././include -I../.././ext/gdbm -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT    -O3 -fno-fast-math -ggdb3 -Wall -Wextra -Wno-unused-parameter -Wno-parentheses -Wno-long-long -Wno-missing-field-initializers -Wunused-variable -Wpointer-arith -Wwrite-strings -Wdeclaration-after-statement -Wshorten-64-to-32 -Wimplicit-function-declaration -Wdivision-by-zero -Wdeprecated-declarations -Wextra-tokens  -pipe conftest.c  -L. -L../.. -L. -fstack-protector     -lruby-static -framework CoreFoundation -lgdbm  -lpthread -ldl -lobjc "
+conftest.c:13:15: warning: implicit declaration of function 'gdbm_open' is invalid in C99 [-Wimplicit-function-declaration]
+int t(void) { gdbm_open(); return 0; }
+              ^
+1 warning generated.
+ld: library not found for -lgdbm
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+checked program was:
+/* begin */
+ 1: #include "ruby.h"
+ 2: 
+ 3: /*top*/
+ 4: extern int t(void);
+ 5: int main(int argc, char **argv)
+ 6: {
+ 7:   if (argc > 1000000) {
+ 8:     printf("%p", &t);
+ 9:   }
+10: 
+11:   return 0;
+12: }
+13: int t(void) { gdbm_open(); return 0; }
+/* end */
+
+--------------------
+
+Failed to configure gdbm. It will not be installed.

@@ -1,4 +1,4 @@
-Terminals unused in grammar
+Terminals which are not used
 
    ")"
    tLAST_TOKEN
@@ -8,9 +8,9 @@ Grammar
 
     0 $accept: program "end-of-input"
 
-    1 $@1: /* empty */
+    1 @1: /* empty */
 
-    2 program: $@1 top_compstmt
+    2 program: @1 top_compstmt
 
     3 top_compstmt: top_stmts opt_terms
 
@@ -21,9 +21,9 @@ Grammar
 
     8 top_stmt: stmt
 
-    9 $@2: /* empty */
+    9 @2: /* empty */
 
-   10 top_stmt: keyword_BEGIN $@2 '{' top_compstmt '}'
+   10 top_stmt: keyword_BEGIN @2 '{' top_compstmt '}'
 
    11 bodystmt: compstmt opt_rescue opt_else opt_ensure
 
@@ -36,13 +36,13 @@ Grammar
 
    17 stmt_or_begin: stmt
 
-   18 $@3: /* empty */
+   18 @3: /* empty */
 
-   19 stmt_or_begin: keyword_BEGIN $@3 '{' top_compstmt '}'
+   19 stmt_or_begin: keyword_BEGIN @3 '{' top_compstmt '}'
 
-   20 $@4: /* empty */
+   20 @4: /* empty */
 
-   21 stmt: keyword_alias fitem $@4 fitem
+   21 stmt: keyword_alias fitem @4 fitem
    22     | keyword_alias tGVAR tGVAR
    23     | keyword_alias tGVAR tBACK_REF
    24     | keyword_alias tGVAR tNTH_REF
@@ -169,9 +169,9 @@ Grammar
 
   123 undef_list: fitem
 
-  124 $@6: /* empty */
+  124 @6: /* empty */
 
-  125 undef_list: undef_list ',' $@6 fitem
+  125 undef_list: undef_list ',' @6 fitem
 
   126 op: '|'
   127   | '^'
@@ -288,15 +288,15 @@ Grammar
   236    | arg "&&" arg
   237    | arg "||" arg
 
-  238 $@7: /* empty */
+  238 @7: /* empty */
 
-  239 arg: keyword_defined opt_nl $@7 arg
+  239 arg: keyword_defined opt_nl @7 arg
 
   240 @8: /* empty */
 
-  241 $@9: /* empty */
+  241 @9: /* empty */
 
-  242 arg: arg '?' @8 arg opt_nl ':' $@9 arg
+  242 arg: arg '?' @8 arg opt_nl ':' @9 arg
   243    | primary
 
   244 arg_value: arg
@@ -360,15 +360,15 @@ Grammar
 
   288 primary: k_begin @11 bodystmt k_end
 
-  289 $@12: /* empty */
+  289 @12: /* empty */
 
-  290 primary: "( arg" $@12 rparen
+  290 primary: "( arg" @12 rparen
 
-  291 $@13: /* empty */
+  291 @13: /* empty */
 
-  292 $@14: /* empty */
+  292 @14: /* empty */
 
-  293 primary: "( arg" $@13 expr $@14 rparen
+  293 primary: "( arg" @13 expr @14 rparen
   294        | "(" compstmt ')'
   295        | primary_value "::" tCONSTANT
   296        | ":: at EXPR_BEG" tCONSTANT
@@ -379,9 +379,9 @@ Grammar
   301        | keyword_yield '(' rparen
   302        | keyword_yield
 
-  303 $@15: /* empty */
+  303 @15: /* empty */
 
-  304 primary: keyword_defined opt_nl '(' $@15 expr rparen
+  304 primary: keyword_defined opt_nl '(' @15 expr rparen
   305        | keyword_not '(' expr rparen
   306        | keyword_not '(' rparen
   307        | fcall brace_block
@@ -391,25 +391,25 @@ Grammar
   311        | k_if expr_value then compstmt if_tail k_end
   312        | k_unless expr_value then compstmt opt_else k_end
 
-  313 $@16: /* empty */
+  313 @16: /* empty */
 
-  314 $@17: /* empty */
+  314 @17: /* empty */
 
-  315 primary: k_while $@16 expr_value do $@17 compstmt k_end
+  315 primary: k_while @16 expr_value do @17 compstmt k_end
 
-  316 $@18: /* empty */
+  316 @18: /* empty */
 
-  317 $@19: /* empty */
+  317 @19: /* empty */
 
-  318 primary: k_until $@18 expr_value do $@19 compstmt k_end
+  318 primary: k_until @18 expr_value do @19 compstmt k_end
   319        | k_case expr_value opt_terms case_body k_end
   320        | k_case opt_terms case_body k_end
 
-  321 $@20: /* empty */
+  321 @20: /* empty */
 
-  322 $@21: /* empty */
+  322 @21: /* empty */
 
-  323 primary: k_for for_var keyword_in $@20 expr_value do $@21 compstmt k_end
+  323 primary: k_for for_var keyword_in @20 expr_value do @21 compstmt k_end
 
   324 @22: /* empty */
 
@@ -429,11 +429,11 @@ Grammar
 
   332 primary: k_def fname @26 f_arglist bodystmt k_end
 
-  333 $@27: /* empty */
+  333 @27: /* empty */
 
   334 @28: /* empty */
 
-  335 primary: k_def singleton dot_or_colon $@27 fname @28 f_arglist bodystmt k_end
+  335 primary: k_def singleton dot_or_colon @27 fname @28 f_arglist bodystmt k_end
   336        | keyword_break
   337        | keyword_next
   338        | keyword_redo
@@ -721,9 +721,9 @@ Grammar
 
   527 superclass: term
 
-  528 $@44: /* empty */
+  528 @44: /* empty */
 
-  529 superclass: '<' $@44 expr_value term
+  529 superclass: '<' @44 expr_value term
   530           | error term
 
   531 f_arglist: '(' f_args rparen
@@ -818,9 +818,9 @@ Grammar
 
   594 singleton: var_ref
 
-  595 $@46: /* empty */
+  595 @46: /* empty */
 
-  596 singleton: '(' $@46 expr rparen
+  596 singleton: '(' @46 expr rparen
 
   597 assoc_list: none
   598           | assocs trailer
@@ -1033,7 +1033,7 @@ $accept (145)
     on left: 0
 program (146)
     on left: 2, on right: 0
-$@1 (147)
+@1 (147)
     on left: 1, on right: 2
 top_compstmt (148)
     on left: 3, on right: 2 10 19
@@ -1041,7 +1041,7 @@ top_stmts (149)
     on left: 4 5 6 7, on right: 3 6
 top_stmt (150)
     on left: 8 10, on right: 5 6 7
-$@2 (151)
+@2 (151)
     on left: 9, on right: 10
 bodystmt (152)
     on left: 11, on right: 288 325 328 330 332 335
@@ -1052,12 +1052,12 @@ stmts (154)
     on left: 13 14 15 16, on right: 12 15
 stmt_or_begin (155)
     on left: 17 19, on right: 14 15
-$@3 (156)
+@3 (156)
     on left: 18, on right: 19
 stmt (157)
     on left: 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38
     39 40 41 42 43, on right: 8 16 17 26 27 28 29 30
-$@4 (158)
+@4 (158)
     on left: 20, on right: 21
 command_asgn (159)
     on left: 44 45, on right: 32 45
@@ -1108,12 +1108,12 @@ fitem (180)
     on left: 121 122, on right: 21 123 125
 undef_list (181)
     on left: 123 125, on right: 25 125
-$@6 (182)
+@6 (182)
     on left: 124, on right: 125
 op (183)
     on left: 126 127 128 129 130 131 132 133 134 135 136 137 138 139
-    140 141 142 143 144 145 146 147 148 149 150 151 152 153 154 155,
-    on right: 117 611 614
+    140 141 142 143 144 145 146 147 148 149 150 151 152 153 154 155
+   , on right: 117 611 614
 reswords (184)
     on left: 156 157 158 159 160 161 162 163 164 165 166 167 168 169
     170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185
@@ -1121,15 +1121,15 @@ reswords (184)
 arg (185)
     on left: 197 198 199 200 201 202 203 204 205 206 207 208 209 210
     211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226
-    227 228 229 230 231 232 233 234 235 236 237 239 242 243, on right:
-    51 197 198 199 200 201 202 203 204 205 206 207 208 209 210 211
-    212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227
-    228 229 230 231 232 233 234 235 236 237 239 242 244
-$@7 (186)
+    227 228 229 230 231 232 233 234 235 236 237 239 242 243,
+    on right: 51 197 198 199 200 201 202 203 204 205 206 207 208 209
+    210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225
+    226 227 228 229 230 231 232 233 234 235 236 237 239 242 244
+@7 (186)
     on left: 238, on right: 239
 @8 (187)
     on left: 240, on right: 242
-$@9 (188)
+@9 (188)
     on left: 241, on right: 242
 arg_value (189)
     on left: 244, on right: 264 267 268 269 270 272 273 274 275 444
@@ -1162,29 +1162,29 @@ mrhs (201)
 primary (202)
     on left: 276 277 278 279 280 281 282 283 284 285 286 288 290 293
     294 295 296 297 298 299 300 301 302 304 305 306 307 308 309 310
-    311 312 315 318 319 320 323 325 328 330 332 335 336 337 338 339,
-    on right: 243 340
+    311 312 315 318 319 320 323 325 328 330 332 335 336 337 338 339
+   , on right: 243 340
 @11 (203)
     on left: 287, on right: 288
-$@12 (204)
+@12 (204)
     on left: 289, on right: 290
-$@13 (205)
+@13 (205)
     on left: 291, on right: 293
-$@14 (206)
+@14 (206)
     on left: 292, on right: 293
-$@15 (207)
+@15 (207)
     on left: 303, on right: 304
-$@16 (208)
+@16 (208)
     on left: 313, on right: 315
-$@17 (209)
+@17 (209)
     on left: 314, on right: 315
-$@18 (210)
+@18 (210)
     on left: 316, on right: 318
-$@19 (211)
+@19 (211)
     on left: 317, on right: 318
-$@20 (212)
+@20 (212)
     on left: 321, on right: 323
-$@21 (213)
+@21 (213)
     on left: 322, on right: 323
 @22 (214)
     on left: 324, on right: 325
@@ -1196,7 +1196,7 @@ $@21 (213)
     on left: 329, on right: 330
 @26 (218)
     on left: 331, on right: 332
-$@27 (219)
+@27 (219)
     on left: 333, on right: 335
 @28 (220)
     on left: 334, on right: 335
@@ -1379,7 +1379,7 @@ backref (306)
     on left: 525 526, on right: 40 99 108 207 285 496
 superclass (307)
     on left: 527 529 530, on right: 325
-$@44 (308)
+@44 (308)
     on left: 528, on right: 529
 f_arglist (309)
     on left: 531 533, on right: 332 335
@@ -1439,7 +1439,7 @@ opt_f_block_arg (334)
     on left: 592 593, on right: 376 377 378 534 535 536
 singleton (335)
     on left: 594 596, on right: 335
-$@46 (336)
+@46 (336)
     on left: 595, on right: 596
 assoc_list (337)
     on left: 597 598, on right: 298
@@ -1480,10 +1480,10 @@ state 0
 
     0 $accept: . program "end-of-input"
 
-    $default  reduce using rule 1 ($@1)
+    $default  reduce using rule 1 (@1)
 
     program  go to state 1
-    $@1      go to state 2
+    @1       go to state 2
 
 
 state 1
@@ -1495,7 +1495,7 @@ state 1
 
 state 2
 
-    2 program: $@1 . top_compstmt
+    2 program: @1 . top_compstmt
 
     error                shift, and go to state 4
     keyword_class        shift, and go to state 5
@@ -2451,7 +2451,7 @@ state 27
 
 state 28
 
-   21 stmt: keyword_alias . fitem $@4 fitem
+   21 stmt: keyword_alias . fitem @4 fitem
    22     | keyword_alias . tGVAR tGVAR
    23     | keyword_alias . tGVAR tBACK_REF
    24     | keyword_alias . tGVAR tNTH_REF
@@ -2544,8 +2544,8 @@ state 28
 
 state 29
 
-  239 arg: keyword_defined . opt_nl $@7 arg
-  304 primary: keyword_defined . opt_nl '(' $@15 expr rparen
+  239 arg: keyword_defined . opt_nl @7 arg
+  304 primary: keyword_defined . opt_nl '(' @15 expr rparen
 
     '\n'  shift, and go to state 235
 
@@ -2556,11 +2556,11 @@ state 29
 
 state 30
 
-   10 top_stmt: keyword_BEGIN . $@2 '{' top_compstmt '}'
+   10 top_stmt: keyword_BEGIN . @2 '{' top_compstmt '}'
 
-    $default  reduce using rule 9 ($@2)
+    $default  reduce using rule 9 (@2)
 
-    $@2  go to state 240
+    @2  go to state 240
 
 
 state 31
@@ -3209,15 +3209,15 @@ state 51
 
 state 52
 
-  290 primary: "( arg" . $@12 rparen
-  293        | "( arg" . $@13 expr $@14 rparen
+  290 primary: "( arg" . @12 rparen
+  293        | "( arg" . @13 expr @14 rparen
 
-    ')'       reduce using rule 289 ($@12)
-    '\n'      reduce using rule 289 ($@12)
-    $default  reduce using rule 291 ($@13)
+    ')'       reduce using rule 289 (@12)
+    '\n'      reduce using rule 289 (@12)
+    $default  reduce using rule 291 (@13)
 
-    $@12  go to state 262
-    $@13  go to state 263
+    @12  go to state 262
+    @13  go to state 263
 
 
 state 53
@@ -3942,7 +3942,7 @@ state 67
 
 state 68
 
-    2 program: $@1 top_compstmt .
+    2 program: @1 top_compstmt .
 
     $default  reduce using rule 2 (program)
 
@@ -4224,7 +4224,7 @@ state 84
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -4531,20 +4531,20 @@ state 89
 
 state 90
 
-  315 primary: k_while . $@16 expr_value do $@17 compstmt k_end
+  315 primary: k_while . @16 expr_value do @17 compstmt k_end
 
-    $default  reduce using rule 313 ($@16)
+    $default  reduce using rule 313 (@16)
 
-    $@16  go to state 363
+    @16  go to state 363
 
 
 state 91
 
-  318 primary: k_until . $@18 expr_value do $@19 compstmt k_end
+  318 primary: k_until . @18 expr_value do @19 compstmt k_end
 
-    $default  reduce using rule 316 ($@18)
+    $default  reduce using rule 316 (@18)
 
-    $@18  go to state 364
+    @18  go to state 364
 
 
 state 92
@@ -4664,7 +4664,7 @@ state 92
 
 state 93
 
-  323 primary: k_for . for_var keyword_in $@20 expr_value do $@21 compstmt k_end
+  323 primary: k_for . for_var keyword_in @20 expr_value do @21 compstmt k_end
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -4961,7 +4961,7 @@ state 95
 state 96
 
   332 primary: k_def . fname @26 f_arglist bodystmt k_end
-  335        | k_def . singleton dot_or_colon $@27 fname @28 f_arglist bodystmt k_end
+  335        | k_def . singleton dot_or_colon @27 fname @28 f_arglist bodystmt k_end
 
     keyword_class        shift, and go to state 121
     keyword_module       shift, and go to state 122
@@ -5803,7 +5803,7 @@ state 197
 state 198
 
    25 stmt: keyword_undef undef_list .
-  125 undef_list: undef_list . ',' $@6 fitem
+  125 undef_list: undef_list . ',' @6 fitem
 
     ','  shift, and go to state 407
 
@@ -6543,7 +6543,7 @@ state 214
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
   244 arg_value: arg .
 
     "**"   shift, and go to state 330
@@ -7325,28 +7325,28 @@ state 237
 
 state 238
 
-   21 stmt: keyword_alias fitem . $@4 fitem
+   21 stmt: keyword_alias fitem . @4 fitem
 
-    $default  reduce using rule 20 ($@4)
+    $default  reduce using rule 20 (@4)
 
-    $@4  go to state 441
+    @4  go to state 441
 
 
 state 239
 
-  239 arg: keyword_defined opt_nl . $@7 arg
-  304 primary: keyword_defined opt_nl . '(' $@15 expr rparen
+  239 arg: keyword_defined opt_nl . @7 arg
+  304 primary: keyword_defined opt_nl . '(' @15 expr rparen
 
     '('  shift, and go to state 442
 
-    $default  reduce using rule 238 ($@7)
+    $default  reduce using rule 238 (@7)
 
-    $@7  go to state 443
+    @7  go to state 443
 
 
 state 240
 
-   10 top_stmt: keyword_BEGIN $@2 . '{' top_compstmt '}'
+   10 top_stmt: keyword_BEGIN @2 . '{' top_compstmt '}'
 
     '{'  shift, and go to state 444
 
@@ -7563,7 +7563,7 @@ state 248
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     $default  reduce using rule 217 (arg)
 
@@ -7621,7 +7621,7 @@ state 250
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
 
@@ -7761,11 +7761,11 @@ state 252
 
 state 253
 
-   19 stmt_or_begin: keyword_BEGIN . $@3 '{' top_compstmt '}'
+   19 stmt_or_begin: keyword_BEGIN . @3 '{' top_compstmt '}'
 
-    $default  reduce using rule 18 ($@3)
+    $default  reduce using rule 18 (@3)
 
-    $@3  go to state 450
+    @3  go to state 450
 
 
 state 254
@@ -7977,7 +7977,7 @@ state 261
 
 state 262
 
-  290 primary: "( arg" $@12 . rparen
+  290 primary: "( arg" @12 . rparen
 
     '\n'  shift, and go to state 235
 
@@ -7989,7 +7989,7 @@ state 262
 
 state 263
 
-  293 primary: "( arg" $@13 . expr $@14 rparen
+  293 primary: "( arg" @13 . expr @14 rparen
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -8171,7 +8171,7 @@ state 271
 
 state 272
 
-  304 primary: keyword_defined . opt_nl '(' $@15 expr rparen
+  304 primary: keyword_defined . opt_nl '(' @15 expr rparen
 
     '\n'  shift, and go to state 235
 
@@ -8589,7 +8589,7 @@ state 303
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     $default  reduce using rule 232 (arg)
 
@@ -8622,7 +8622,7 @@ state 304
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     $default  reduce using rule 233 (arg)
 
@@ -11585,7 +11585,7 @@ state 344
 
 state 345
 
-  242 arg: arg '?' . @8 arg opt_nl ':' $@9 arg
+  242 arg: arg '?' . @8 arg opt_nl ':' @9 arg
 
     $default  reduce using rule 240 (@8)
 
@@ -13006,7 +13006,7 @@ state 362
 
 state 363
 
-  315 primary: k_while $@16 . expr_value do $@17 compstmt k_end
+  315 primary: k_while @16 . expr_value do @17 compstmt k_end
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -13113,7 +13113,7 @@ state 363
 
 state 364
 
-  318 primary: k_until $@18 . expr_value do $@19 compstmt k_end
+  318 primary: k_until @18 . expr_value do @19 compstmt k_end
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -13301,7 +13301,7 @@ state 371
 
 state 372
 
-  323 primary: k_for for_var . keyword_in $@20 expr_value do $@21 compstmt k_end
+  323 primary: k_for for_var . keyword_in @20 expr_value do @21 compstmt k_end
 
     keyword_in  shift, and go to state 585
 
@@ -13644,11 +13644,11 @@ state 395
 
 state 396
 
-  596 singleton: '(' . $@46 expr rparen
+  596 singleton: '(' . @46 expr rparen
 
-    $default  reduce using rule 595 ($@46)
+    $default  reduce using rule 595 (@46)
 
-    $@46  go to state 598
+    @46  go to state 598
 
 
 state 397
@@ -13669,7 +13669,7 @@ state 398
 
 state 399
 
-  335 primary: k_def singleton . dot_or_colon $@27 fname @28 f_arglist bodystmt k_end
+  335 primary: k_def singleton . dot_or_colon @27 fname @28 f_arglist bodystmt k_end
 
     "::"  shift, and go to state 400
     '.'   shift, and go to state 401
@@ -13965,11 +13965,11 @@ state 406
 
 state 407
 
-  125 undef_list: undef_list ',' . $@6 fitem
+  125 undef_list: undef_list ',' . @6 fitem
 
-    $default  reduce using rule 124 ($@6)
+    $default  reduce using rule 124 (@6)
 
-    $@6  go to state 608
+    @6  go to state 608
 
 
 state 408
@@ -15045,7 +15045,7 @@ state 440
 
 state 441
 
-   21 stmt: keyword_alias fitem $@4 . fitem
+   21 stmt: keyword_alias fitem @4 . fitem
 
     keyword_class        shift, and go to state 121
     keyword_module       shift, and go to state 122
@@ -15134,16 +15134,16 @@ state 441
 
 state 442
 
-  304 primary: keyword_defined opt_nl '(' . $@15 expr rparen
+  304 primary: keyword_defined opt_nl '(' . @15 expr rparen
 
-    $default  reduce using rule 303 ($@15)
+    $default  reduce using rule 303 (@15)
 
-    $@15  go to state 629
+    @15  go to state 629
 
 
 state 443
 
-  239 arg: keyword_defined opt_nl $@7 . arg
+  239 arg: keyword_defined opt_nl @7 . arg
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -15244,7 +15244,7 @@ state 443
 
 state 444
 
-   10 top_stmt: keyword_BEGIN $@2 '{' . top_compstmt '}'
+   10 top_stmt: keyword_BEGIN @2 '{' . top_compstmt '}'
 
     error                shift, and go to state 4
     keyword_class        shift, and go to state 5
@@ -15600,7 +15600,7 @@ state 449
 
 state 450
 
-   19 stmt_or_begin: keyword_BEGIN $@3 . '{' top_compstmt '}'
+   19 stmt_or_begin: keyword_BEGIN @3 . '{' top_compstmt '}'
 
     '{'  shift, and go to state 636
 
@@ -15768,7 +15768,7 @@ state 455
 
 state 456
 
-  290 primary: "( arg" $@12 rparen .
+  290 primary: "( arg" @12 rparen .
 
     $default  reduce using rule 290 (primary)
 
@@ -15777,14 +15777,14 @@ state 457
 
    47 expr: expr . keyword_and expr
    48     | expr . keyword_or expr
-  293 primary: "( arg" $@13 expr . $@14 rparen
+  293 primary: "( arg" @13 expr . @14 rparen
 
     keyword_and  shift, and go to state 315
     keyword_or   shift, and go to state 316
 
-    $default  reduce using rule 292 ($@14)
+    $default  reduce using rule 292 (@14)
 
-    $@14  go to state 639
+    @14  go to state 639
 
 
 state 458
@@ -16051,7 +16051,7 @@ state 465
 
 state 466
 
-  304 primary: keyword_defined opt_nl . '(' $@15 expr rparen
+  304 primary: keyword_defined opt_nl . '(' @15 expr rparen
 
     '('  shift, and go to state 442
 
@@ -17176,7 +17176,7 @@ state 527
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
   244 arg_value: arg .
 
     modifier_rescue  shift, and go to state 703
@@ -17253,7 +17253,7 @@ state 530
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
 
@@ -17288,7 +17288,7 @@ state 531
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     ">="  shift, and go to state 335
@@ -17344,7 +17344,7 @@ state 532
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     ">="  shift, and go to state 335
@@ -17400,7 +17400,7 @@ state 533
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     ">="  shift, and go to state 335
@@ -17456,7 +17456,7 @@ state 534
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     ">="  shift, and go to state 335
@@ -17512,7 +17512,7 @@ state 535
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     "<<"  shift, and go to state 343
@@ -17557,7 +17557,7 @@ state 536
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     "<<"  shift, and go to state 343
@@ -17602,7 +17602,7 @@ state 537
   236    | arg . "&&" arg
   236    | arg "&&" arg .
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -17657,7 +17657,7 @@ state 538
   236    | arg . "&&" arg
   237    | arg . "||" arg
   237    | arg "||" arg .
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -17713,7 +17713,7 @@ state 539
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     ">="  shift, and go to state 335
@@ -17769,7 +17769,7 @@ state 540
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     ">="  shift, and go to state 335
@@ -17825,7 +17825,7 @@ state 541
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -17885,7 +17885,7 @@ state 542
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -17945,7 +17945,7 @@ state 543
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     '+'   shift, and go to state 351
@@ -17985,7 +17985,7 @@ state 544
   235    | arg ">>" arg .
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     '+'   shift, and go to state 351
@@ -17999,7 +17999,7 @@ state 544
 
 state 545
 
-  242 arg: arg '?' @8 . arg opt_nl ':' $@9 arg
+  242 arg: arg '?' @8 . arg opt_nl ':' @9 arg
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -18126,7 +18126,7 @@ state 546
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     "<<"  shift, and go to state 343
@@ -18171,7 +18171,7 @@ state 547
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     "<<"  shift, and go to state 343
@@ -18216,7 +18216,7 @@ state 548
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     "<<"  shift, and go to state 343
@@ -18259,7 +18259,7 @@ state 549
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     "<<"  shift, and go to state 343
@@ -18302,7 +18302,7 @@ state 550
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     "<<"  shift, and go to state 343
@@ -18344,7 +18344,7 @@ state 551
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     '*'   shift, and go to state 353
@@ -18382,7 +18382,7 @@ state 552
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
     '*'   shift, and go to state 353
@@ -18420,7 +18420,7 @@ state 553
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
 
@@ -18455,7 +18455,7 @@ state 554
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
 
@@ -18490,7 +18490,7 @@ state 555
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
 
@@ -19230,7 +19230,7 @@ state 575
 
 state 576
 
-  315 primary: k_while $@16 expr_value . do $@17 compstmt k_end
+  315 primary: k_while @16 expr_value . do @17 compstmt k_end
 
     keyword_do_cond  shift, and go to state 725
     ';'              shift, and go to state 305
@@ -19242,7 +19242,7 @@ state 576
 
 state 577
 
-  318 primary: k_until $@18 expr_value . do $@19 compstmt k_end
+  318 primary: k_until @18 expr_value . do @19 compstmt k_end
 
     keyword_do_cond  shift, and go to state 725
     ';'              shift, and go to state 305
@@ -19608,11 +19608,11 @@ state 584
 
 state 585
 
-  323 primary: k_for for_var keyword_in . $@20 expr_value do $@21 compstmt k_end
+  323 primary: k_for for_var keyword_in . @20 expr_value do @21 compstmt k_end
 
-    $default  reduce using rule 321 ($@20)
+    $default  reduce using rule 321 (@20)
 
-    $@20  go to state 737
+    @20  go to state 737
 
 
 state 586
@@ -19666,11 +19666,11 @@ state 590
 
 state 591
 
-  529 superclass: '<' . $@44 expr_value term
+  529 superclass: '<' . @44 expr_value term
 
-    $default  reduce using rule 528 ($@44)
+    $default  reduce using rule 528 (@44)
 
-    $@44  go to state 740
+    @44  go to state 740
 
 
 state 592
@@ -20035,7 +20035,7 @@ state 597
 
 state 598
 
-  596 singleton: '(' $@46 . expr rparen
+  596 singleton: '(' @46 . expr rparen
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -20153,11 +20153,11 @@ state 599
 
 state 600
 
-  335 primary: k_def singleton dot_or_colon . $@27 fname @28 f_arglist bodystmt k_end
+  335 primary: k_def singleton dot_or_colon . @27 fname @28 f_arglist bodystmt k_end
 
-    $default  reduce using rule 333 ($@27)
+    $default  reduce using rule 333 (@27)
 
-    $@27  go to state 751
+    @27  go to state 751
 
 
 state 601
@@ -20253,7 +20253,7 @@ state 605
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     modifier_rescue  shift, and go to state 756
     "**"             shift, and go to state 330
@@ -20321,7 +20321,7 @@ state 607
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -20355,7 +20355,7 @@ state 607
 
 state 608
 
-  125 undef_list: undef_list ',' $@6 . fitem
+  125 undef_list: undef_list ',' @6 . fitem
 
     keyword_class        shift, and go to state 121
     keyword_module       shift, and go to state 122
@@ -20573,7 +20573,7 @@ state 610
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     modifier_rescue  shift, and go to state 703
     "**"             shift, and go to state 330
@@ -21191,14 +21191,14 @@ state 627
 
 state 628
 
-   21 stmt: keyword_alias fitem $@4 fitem .
+   21 stmt: keyword_alias fitem @4 fitem .
 
     $default  reduce using rule 21 (stmt)
 
 
 state 629
 
-  304 primary: keyword_defined opt_nl '(' $@15 . expr rparen
+  304 primary: keyword_defined opt_nl '(' @15 . expr rparen
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -21329,8 +21329,8 @@ state 630
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  239    | keyword_defined opt_nl $@7 arg .
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  239    | keyword_defined opt_nl @7 arg .
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -21364,7 +21364,7 @@ state 630
 
 state 631
 
-   10 top_stmt: keyword_BEGIN $@2 '{' top_compstmt . '}'
+   10 top_stmt: keyword_BEGIN @2 '{' top_compstmt . '}'
 
     '}'  shift, and go to state 768
 
@@ -21422,7 +21422,7 @@ state 635
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -21456,7 +21456,7 @@ state 635
 
 state 636
 
-   19 stmt_or_begin: keyword_BEGIN $@3 '{' . top_compstmt '}'
+   19 stmt_or_begin: keyword_BEGIN @3 '{' . top_compstmt '}'
 
     error                shift, and go to state 4
     keyword_class        shift, and go to state 5
@@ -21601,7 +21601,7 @@ state 638
 
 state 639
 
-  293 primary: "( arg" $@13 expr $@14 . rparen
+  293 primary: "( arg" @13 expr @14 . rparen
 
     '\n'  shift, and go to state 235
 
@@ -22304,7 +22304,7 @@ state 688
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"  shift, and go to state 330
 
@@ -23237,8 +23237,8 @@ state 704
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
-  242    | arg '?' @8 arg . opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
+  242    | arg '?' @8 arg . opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -23963,11 +23963,11 @@ state 725
 
 state 726
 
-  315 primary: k_while $@16 expr_value do . $@17 compstmt k_end
+  315 primary: k_while @16 expr_value do . @17 compstmt k_end
 
-    $default  reduce using rule 314 ($@17)
+    $default  reduce using rule 314 (@17)
 
-    $@17  go to state 852
+    @17  go to state 852
 
 
 state 727
@@ -23979,11 +23979,11 @@ state 727
 
 state 728
 
-  318 primary: k_until $@18 expr_value do . $@19 compstmt k_end
+  318 primary: k_until @18 expr_value do . @19 compstmt k_end
 
-    $default  reduce using rule 317 ($@19)
+    $default  reduce using rule 317 (@19)
 
-    $@19  go to state 853
+    @19  go to state 853
 
 
 state 729
@@ -24081,7 +24081,7 @@ state 736
 
 state 737
 
-  323 primary: k_for for_var keyword_in $@20 . expr_value do $@21 compstmt k_end
+  323 primary: k_for for_var keyword_in @20 . expr_value do @21 compstmt k_end
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -24205,7 +24205,7 @@ state 739
 
 state 740
 
-  529 superclass: '<' $@44 . expr_value term
+  529 superclass: '<' @44 . expr_value term
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -24501,7 +24501,7 @@ state 747
 
    47 expr: expr . keyword_and expr
    48     | expr . keyword_or expr
-  596 singleton: '(' $@46 expr . rparen
+  596 singleton: '(' @46 expr . rparen
 
     keyword_and  shift, and go to state 315
     keyword_or   shift, and go to state 316
@@ -24726,7 +24726,7 @@ state 750
 
 state 751
 
-  335 primary: k_def singleton dot_or_colon $@27 . fname @28 f_arglist bodystmt k_end
+  335 primary: k_def singleton dot_or_colon @27 . fname @28 f_arglist bodystmt k_end
 
     keyword_class        shift, and go to state 121
     keyword_module       shift, and go to state 122
@@ -24950,7 +24950,7 @@ state 756
 
 state 757
 
-  125 undef_list: undef_list ',' $@6 fitem .
+  125 undef_list: undef_list ',' @6 fitem .
 
     $default  reduce using rule 125 (undef_list)
 
@@ -25410,7 +25410,7 @@ state 767
 
    47 expr: expr . keyword_and expr
    48     | expr . keyword_or expr
-  304 primary: keyword_defined opt_nl '(' $@15 expr . rparen
+  304 primary: keyword_defined opt_nl '(' @15 expr . rparen
 
     keyword_and  shift, and go to state 315
     keyword_or   shift, and go to state 316
@@ -25424,21 +25424,21 @@ state 767
 
 state 768
 
-   10 top_stmt: keyword_BEGIN $@2 '{' top_compstmt '}' .
+   10 top_stmt: keyword_BEGIN @2 '{' top_compstmt '}' .
 
     $default  reduce using rule 10 (top_stmt)
 
 
 state 769
 
-   19 stmt_or_begin: keyword_BEGIN $@3 '{' top_compstmt . '}'
+   19 stmt_or_begin: keyword_BEGIN @3 '{' top_compstmt . '}'
 
     '}'  shift, and go to state 875
 
 
 state 770
 
-  293 primary: "( arg" $@13 expr $@14 rparen .
+  293 primary: "( arg" @13 expr @14 rparen .
 
     $default  reduce using rule 293 (primary)
 
@@ -26467,7 +26467,7 @@ state 825
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -26501,7 +26501,7 @@ state 825
 
 state 826
 
-  242 arg: arg '?' @8 arg opt_nl . ':' $@9 arg
+  242 arg: arg '?' @8 arg opt_nl . ':' @9 arg
 
     ':'  shift, and go to state 919
 
@@ -26541,7 +26541,7 @@ state 828
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -26608,7 +26608,7 @@ state 830
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -26802,7 +26802,7 @@ state 836
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -26869,7 +26869,7 @@ state 838
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -27231,7 +27231,7 @@ state 851
 
 state 852
 
-  315 primary: k_while $@16 expr_value do $@17 . compstmt k_end
+  315 primary: k_while @16 expr_value do @17 . compstmt k_end
 
     error                shift, and go to state 252
     keyword_class        shift, and go to state 5
@@ -27358,7 +27358,7 @@ state 852
 
 state 853
 
-  318 primary: k_until $@18 expr_value do $@19 . compstmt k_end
+  318 primary: k_until @18 expr_value do @19 . compstmt k_end
 
     error                shift, and go to state 252
     keyword_class        shift, and go to state 5
@@ -27736,7 +27736,7 @@ state 857
 
 state 858
 
-  323 primary: k_for for_var keyword_in $@20 expr_value . do $@21 compstmt k_end
+  323 primary: k_for for_var keyword_in @20 expr_value . do @21 compstmt k_end
 
     keyword_do_cond  shift, and go to state 725
     ';'              shift, and go to state 305
@@ -27757,7 +27757,7 @@ state 859
 
 state 860
 
-  529 superclass: '<' $@44 expr_value . term
+  529 superclass: '<' @44 expr_value . term
 
     ';'   shift, and go to state 305
     '\n'  shift, and go to state 306
@@ -27790,7 +27790,7 @@ state 863
 
 state 864
 
-  596 singleton: '(' $@46 expr rparen .
+  596 singleton: '(' @46 expr rparen .
 
     $default  reduce using rule 596 (singleton)
 
@@ -27828,7 +27828,7 @@ state 867
 
 state 868
 
-  335 primary: k_def singleton dot_or_colon $@27 fname . @28 f_arglist bodystmt k_end
+  335 primary: k_def singleton dot_or_colon @27 fname . @28 f_arglist bodystmt k_end
 
     $default  reduce using rule 334 (@28)
 
@@ -27877,7 +27877,7 @@ state 871
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -28123,14 +28123,14 @@ state 873
 
 state 874
 
-  304 primary: keyword_defined opt_nl '(' $@15 expr rparen .
+  304 primary: keyword_defined opt_nl '(' @15 expr rparen .
 
     $default  reduce using rule 304 (primary)
 
 
 state 875
 
-   19 stmt_or_begin: keyword_BEGIN $@3 '{' top_compstmt '}' .
+   19 stmt_or_begin: keyword_BEGIN @3 '{' top_compstmt '}' .
 
     $default  reduce using rule 19 (stmt_or_begin)
 
@@ -28963,11 +28963,11 @@ state 918
 
 state 919
 
-  242 arg: arg '?' @8 arg opt_nl ':' . $@9 arg
+  242 arg: arg '?' @8 arg opt_nl ':' . @9 arg
 
-    $default  reduce using rule 241 ($@9)
+    $default  reduce using rule 241 (@9)
 
-    $@9  go to state 981
+    @9  go to state 981
 
 
 state 920
@@ -29005,7 +29005,7 @@ state 921
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -29327,7 +29327,7 @@ state 931
 
 state 932
 
-  315 primary: k_while $@16 expr_value do $@17 compstmt . k_end
+  315 primary: k_while @16 expr_value do @17 compstmt . k_end
 
     keyword_end  shift, and go to state 717
 
@@ -29336,7 +29336,7 @@ state 932
 
 state 933
 
-  318 primary: k_until $@18 expr_value do $@19 compstmt . k_end
+  318 primary: k_until @18 expr_value do @19 compstmt . k_end
 
     keyword_end  shift, and go to state 717
 
@@ -29367,11 +29367,11 @@ state 935
 
 state 936
 
-  323 primary: k_for for_var keyword_in $@20 expr_value do . $@21 compstmt k_end
+  323 primary: k_for for_var keyword_in @20 expr_value do . @21 compstmt k_end
 
-    $default  reduce using rule 322 ($@21)
+    $default  reduce using rule 322 (@21)
 
-    $@21  go to state 996
+    @21  go to state 996
 
 
 state 937
@@ -29507,7 +29507,7 @@ state 937
 
 state 938
 
-  529 superclass: '<' $@44 expr_value term .
+  529 superclass: '<' @44 expr_value term .
 
     $default  reduce using rule 529 (superclass)
 
@@ -29542,7 +29542,7 @@ state 942
 
 state 943
 
-  335 primary: k_def singleton dot_or_colon $@27 fname @28 . f_arglist bodystmt k_end
+  335 primary: k_def singleton dot_or_colon @27 fname @28 . f_arglist bodystmt k_end
 
     '('  shift, and go to state 748
 
@@ -30158,7 +30158,7 @@ state 980
 
 state 981
 
-  242 arg: arg '?' @8 arg opt_nl ':' $@9 . arg
+  242 arg: arg '?' @8 arg opt_nl ':' @9 . arg
 
     keyword_class        shift, and go to state 5
     keyword_module       shift, and go to state 6
@@ -30593,14 +30593,14 @@ state 990
 
 state 991
 
-  315 primary: k_while $@16 expr_value do $@17 compstmt k_end .
+  315 primary: k_while @16 expr_value do @17 compstmt k_end .
 
     $default  reduce using rule 315 (primary)
 
 
 state 992
 
-  318 primary: k_until $@18 expr_value do $@19 compstmt k_end .
+  318 primary: k_until @18 expr_value do @19 compstmt k_end .
 
     $default  reduce using rule 318 (primary)
 
@@ -30628,7 +30628,7 @@ state 995
 
 state 996
 
-  323 primary: k_for for_var keyword_in $@20 expr_value do $@21 . compstmt k_end
+  323 primary: k_for for_var keyword_in @20 expr_value do @21 . compstmt k_end
 
     error                shift, and go to state 252
     keyword_class        shift, and go to state 5
@@ -30764,7 +30764,7 @@ state 997
 
 state 998
 
-  335 primary: k_def singleton dot_or_colon $@27 fname @28 f_arglist . bodystmt k_end
+  335 primary: k_def singleton dot_or_colon @27 fname @28 f_arglist . bodystmt k_end
 
     error                shift, and go to state 252
     keyword_class        shift, and go to state 5
@@ -31258,8 +31258,8 @@ state 1024
   235    | arg . ">>" arg
   236    | arg . "&&" arg
   237    | arg . "||" arg
-  242    | arg . '?' @8 arg opt_nl ':' $@9 arg
-  242    | arg '?' @8 arg opt_nl ':' $@9 arg .
+  242    | arg . '?' @8 arg opt_nl ':' @9 arg
+  242    | arg '?' @8 arg opt_nl ':' @9 arg .
 
     "**"   shift, and go to state 330
     "<=>"  shift, and go to state 331
@@ -31546,7 +31546,7 @@ state 1030
 
 state 1031
 
-  323 primary: k_for for_var keyword_in $@20 expr_value do $@21 compstmt . k_end
+  323 primary: k_for for_var keyword_in @20 expr_value do @21 compstmt . k_end
 
     keyword_end  shift, and go to state 717
 
@@ -31562,7 +31562,7 @@ state 1032
 
 state 1033
 
-  335 primary: k_def singleton dot_or_colon $@27 fname @28 f_arglist bodystmt . k_end
+  335 primary: k_def singleton dot_or_colon @27 fname @28 f_arglist bodystmt . k_end
 
     keyword_end  shift, and go to state 717
 
@@ -31795,14 +31795,14 @@ state 1053
 
 state 1054
 
-  323 primary: k_for for_var keyword_in $@20 expr_value do $@21 compstmt k_end .
+  323 primary: k_for for_var keyword_in @20 expr_value do @21 compstmt k_end .
 
     $default  reduce using rule 323 (primary)
 
 
 state 1055
 
-  335 primary: k_def singleton dot_or_colon $@27 fname @28 f_arglist bodystmt k_end .
+  335 primary: k_def singleton dot_or_colon @27 fname @28 f_arglist bodystmt k_end .
 
     $default  reduce using rule 335 (primary)
 
