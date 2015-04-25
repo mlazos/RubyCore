@@ -1,4 +1,4 @@
-Thu, 23 Apr 2015 21:52:51 -0400
+Fri, 24 Apr 2015 21:18:29 -0400
 ./addr2line.c	Mon, 20 Apr 2015 21:09:23 -0400
 ./addr2line.h	Mon, 20 Apr 2015 21:09:23 -0400
 ./array.c	Mon, 20 Apr 2015 21:09:23 -0400
@@ -547,7 +547,7 @@ Thu, 23 Apr 2015 21:52:51 -0400
 ./enc/windows_31j.c	Mon, 20 Apr 2015 21:09:24 -0400
 ./enc/windows_31j.o	Wed, 22 Apr 2015 13:46:38 -0400
 ./enc/x_emoji.h	Mon, 20 Apr 2015 21:09:24 -0400
-./enc.mk	Thu, 23 Apr 2015 21:52:48 -0400
+./enc.mk	Fri, 24 Apr 2015 21:18:25 -0400
 ./encdb.h	Wed, 22 Apr 2015 13:46:35 -0400
 ./encoding.c	Mon, 20 Apr 2015 21:09:24 -0400
 ./encoding.o	Thu, 23 Apr 2015 21:49:01 -0400
@@ -1429,11 +1429,11 @@ Thu, 23 Apr 2015 21:52:51 -0400
 ./lib/yaml/dbm.rb	Mon, 20 Apr 2015 21:09:25 -0400
 ./lib/yaml/store.rb	Mon, 20 Apr 2015 21:09:25 -0400
 ./lib/yaml.rb	Mon, 20 Apr 2015 21:09:25 -0400
-./libruby-static.a	Thu, 23 Apr 2015 21:52:49 -0400
+./libruby-static.a	Fri, 24 Apr 2015 21:18:27 -0400
 ./load.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./load.o	Thu, 23 Apr 2015 21:49:01 -0400
 ./loadpath.c	Mon, 20 Apr 2015 21:09:25 -0400
-./loadpath.o	Thu, 23 Apr 2015 21:52:48 -0400
+./loadpath.o	Fri, 24 Apr 2015 21:18:25 -0400
 ./localeinit.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./localeinit.o	Thu, 23 Apr 2015 21:49:01 -0400
 ./main.c	Mon, 20 Apr 2015 21:09:25 -0400
@@ -1454,7 +1454,7 @@ Thu, 23 Apr 2015 21:52:51 -0400
 ./miniinit.o	Thu, 23 Apr 2015 21:49:01 -0400
 ./miniprelude.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./miniprelude.o	Thu, 23 Apr 2015 21:49:01 -0400
-./miniruby	Thu, 23 Apr 2015 21:52:48 -0400
+./miniruby	Fri, 24 Apr 2015 21:18:25 -0400
 ./misc/rb_optparse.bash	Mon, 20 Apr 2015 21:09:25 -0400
 ./misc/rb_optparse.zsh	Mon, 20 Apr 2015 21:09:25 -0400
 ./misc/rdoc-mode.el	Mon, 20 Apr 2015 21:09:25 -0400
@@ -1513,9 +1513,9 @@ Thu, 23 Apr 2015 21:52:51 -0400
 ./newline.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./newline.o	Thu, 23 Apr 2015 21:49:01 -0400
 ./NEWS	Mon, 20 Apr 2015 21:09:23 -0400
-./node.c	Thu, 23 Apr 2015 21:52:31 -0400
+./node.c	Fri, 24 Apr 2015 21:18:22 -0400
 ./node.h	Mon, 20 Apr 2015 21:09:25 -0400
-./node.o	Thu, 23 Apr 2015 21:52:48 -0400
+./node.o	Fri, 24 Apr 2015 21:18:25 -0400
 ./node_name.inc	Thu, 23 Apr 2015 21:49:01 -0400
 ./numeric.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./numeric.o	Thu, 23 Apr 2015 21:49:01 -0400
@@ -1565,7 +1565,7 @@ Thu, 23 Apr 2015 21:52:51 -0400
 ./regsyntax.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./regsyntax.o	Thu, 23 Apr 2015 21:49:01 -0400
 ./revision.h	Mon, 20 Apr 2015 21:09:25 -0400
-./ruby	Thu, 23 Apr 2015 21:52:51 -0400
+./ruby	Fri, 24 Apr 2015 21:18:29 -0400
 ./ruby-2.2.pc	Wed, 22 Apr 2015 13:44:56 -0400
 ./ruby.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./ruby.o	Thu, 23 Apr 2015 21:49:01 -0400
@@ -2935,7 +2935,7 @@ Thu, 23 Apr 2015 21:52:51 -0400
 ./util.o	Thu, 23 Apr 2015 21:49:01 -0400
 ./variable.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./variable.o	Thu, 23 Apr 2015 21:49:01 -0400
-./verconf.h	Thu, 23 Apr 2015 21:52:48 -0400
+./verconf.h	Fri, 24 Apr 2015 21:18:25 -0400
 ./version.c	Mon, 20 Apr 2015 21:09:25 -0400
 ./version.h	Mon, 20 Apr 2015 21:09:25 -0400
 ./version.o	Thu, 23 Apr 2015 21:49:01 -0400
@@ -3011,7 +3011,8 @@ Thu, 23 Apr 2015 21:52:51 -0400
 ./cs273/eval-flk-redex.hs	Sun, 05 Apr 2015 23:34:50 -0400
 ./cs273/state2.hs	Wed, 15 Apr 2015 14:54:31 -0400
 ./cs273/tfold.hs	Thu, 16 Apr 2015 15:25:59 -0400
-./RubyCoreLang.txt	Thu, 23 Apr 2015 21:52:42 -0400
-./RubyStuff/simple.rb	Thu, 23 Apr 2015 21:18:41 -0400
+./RubyCoreLang.txt	Fri, 24 Apr 2015 21:17:30 -0400
+./RubyStuff/simple.rb	Fri, 24 Apr 2015 21:17:18 -0400
 ./RubyStuff/test.rb	Mon, 13 Apr 2015 08:07:07 -0400
 ./RubyStuff/yield.rb	Thu, 23 Apr 2015 17:58:49 -0400
+./backupnode.c	Fri, 24 Apr 2015 19:38:57 -0400

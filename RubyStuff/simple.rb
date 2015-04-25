@@ -1,12 +1,11 @@
 #block example
-x = 5;
-x + 1;
 
-
-def func1(a)
+def func1(a)	
+	b = 5
 	return	1
 end
 
+#func1(3) {|a| return a}
 
 
 

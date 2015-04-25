@@ -918,14 +918,31 @@ rb_parser_dump_tree(NODE *node, int comment)
 
 /*AST to core language *************************************/
 #define RECUR(name) rb_to_core(node->name)
-#define RTC(x) rb_to_core(x)
+
 #define NO_FREE 0
-#define FREE 0
+#define FREE 1
+#define SCATF(x,y) strappend(x,y,FREE)
+#define SCAT(x,y) strappend(x,y,NO_FREE)
+#define STR(x) str_new(x)
+
+#define PAD(x) SCATF(SCATF(STR(" "),x),STR(" "))
+#define PADR(x) SCATF(x, STR(" "))
+#define PADL(x) SCATF(STR(" "), x)
+#define RTC(x) rb_to_core(x)
+#define ID2STR(x) STR(rb_id2name(x))
+#define CLOSP(x) SCATF(x,STR(")"))
+
+
+static char *strappend(char*,char*,int);
+static char *str_new(const char*);
+static char *rb_to_core(NODE*);
 
 
 static char 
 *rb_to_core(NODE *node) {
-    
+
+
+
 	char *out;
 	if (!node) {
     out = malloc(sizeof(char));
@@ -933,80 +950,91 @@ static char
 	return out;
     }
 
-	const char *close_par = ")";
-
     switch (nd_type(node)) {
       case NODE_BLOCK: {
 	/*statement sequence [nd_head]; [nd_next]*/
-	const char *stmt = "(do ";
 	/*temp_res holds the result while the original strings are freed*/
-	char *cur_str = RECUR(nd_head);
-	char *temp_res;
-	temp_res = strappend(stmt, cur_str, NO_FREE);
-	free(cur_str);
-	cur_str = temp_res;
+							   
+	char *cur_str = SCATF(STR("(do "),RTC(node->nd_head));
 	
 	NODE *next = node->nd_next;
 	while(next) {
-	  char* new_str = RTC(next->nd_head);
-	  temp_res = strappend(cur_str, new_str, FREE);
-	  cur_str = temp_res; 
+	  cur_str = SCATF(cur_str, PAD(RTC(next->nd_head)));
 	  next = next->nd_next;
 	}
-	
-	temp_res = strappend(cur_str, close_par, NO_FREE);
-    free(cur_str);
-	out = temp_res;
-	return out;	
+
+	return  SCATF(cur_str, STR(")"));
 					   }
-	break;
-   
+
    	  case NODE_SCOPE: { /*
 	ANN("new scope");
 	ANN("format: [nd_tbl]: local table, [nd_args]: arguments, [nd_body]: body");
 	*/
-	return RECUR(nd_body);	
+    ID *tbl = node->nd_tbl;
+	int i;
+	int size = tbl ? (int)*tbl++ : 0;
+	out = STR("(lam (");
+	for (i = 0; i < size; i++) {
+		char* id = STR(ID2STR(tbl[i])); 
+		out = SCATF(out, PAD(id));		
+	}
+	out = SCATF(out, STR(") "));
+	out = SCATF(out, RTC(node->nd_body));
+	out = SCATF(out, STR(" )"));
+	return out;	
 					   }
-	break;
-
       case NODE_IF: 
 	/*if [nd_cond] then [nd_body] else [nd_else]*/
-    	
-	
-	RECUR(nd_cond);
-	RECUR(nd_body);
-	RECUR(nd_else);
-	break;
 
+	out = SCATF(STR("(if "), RTC(node->nd_cond));
+    out = SCATF(out, PAD(RTC(node->nd_body)));
+	return SCATF(out, SCATF(RTC(node->nd_else), STR(" )")));
+			
       case NODE_ITER:
 	/*method call with block [nd_iter] { [nd_body] }*/
-	goto iter;
-      iter:
-	RECUR(nd_iter);
-	RECUR(nd_body);
-	break;
+    	
+	out = SCATF(STR("(app-b "), PAD(RTC(node->nd_iter)));
+	out = SCATF(out, RTC(node->nd_body));	
+	out = SCATF(out, STR(" )"));
+	return out;
 
-      case NODE_BREAK:
+      case NODE_DEFN:
+	/*
+	ANN("method definition");
+	ANN("format: def [nd_mid] [nd_defn]; end");
+	ANN("example; def foo; bar; end");
+	*/
+	out = SCATF(STR("(def "), PAD(ID2STR(node->nd_mid)));
+ 	out = SCATF(out, RTC(node->nd_defn));
+	out = SCATF(out, STR(" )"));
+	return out;
+	
+	 	  case NODE_BREAK:
 	/*break [nd_stts]*/
       case NODE_NEXT:
 	/*next [nd_stts]*/
       case NODE_RETURN:
 	/*return [nd_stts]*/
-	RECUR(nd_stts);
+	return CLOSP(SCATF(STR("(ret "), RTC(node->nd_stts)));
 	break;
 
       case NODE_AND:
 	/* [nd_1st] && [nd_2nd]*/
-    RECUR(nd_1st);
-	RECUR(nd_2nd);
-	break;
+	out = STR("(and ");
+	goto andor;
 	  case NODE_OR:
 	/*[nd_1st] || [nd_2nd]*/
-    RECUR(nd_1st);
-  	RECUR(nd_2nd);	
-	break;
+	out = STR("(or ");
+	andor:
+	  return CLOSP(SCATF(SCATF(out, PAD(RTC(node->nd_1st))), RTC(node->nd_2nd)));	
 
-      case NODE_LASGN:
+  	  case NODE_FCALL:
+	/*function call
+	 * [nd_mid]([nd_args]) */
+	out = SCATF(STR("(app "), ID2STR(node->nd_mid));
+	return  CLOSP(SCATF(out, RTC(node->nd_args)));
+     	
+     case NODE_LASGN:
 	/*local var :: [nd_vid](lvar) = [nd_value]*/
 	goto asgn;
       
@@ -1019,15 +1047,10 @@ static char
 	/*dynamic var in current scope (ex. 1.times{ x = foo })
 	 * [nd_vid](current dvar) = [nd_value]*/	
 	asgn:
-	F_ID(nd_vid, "variable");
-	LAST_NODE;
-	if (node->nd_value == (NODE *)-1) {
-	    F_MSG(nd_value, "rvalue", "(required keyword argument)");
-	}
-	else {
-	    F_NODE(nd_value, "rvalue");
-	}
-	break;
+	  out = SCATF(STR("(let (["),PADR(ID2STR(node->nd_vid)));
+	  return SCATF(PADR(SCATF(out, SCATF(STR(" "), RTC(node->nd_value)))), STR("])"));
+          
+
 
       case NODE_CALL:
 	/*method invocation
@@ -1037,14 +1060,7 @@ static char
 	F_NODE(nd_args, "arguments");
 	break;
 
-      case NODE_FCALL:
-	/*function call
-	 * [nd_mid]([nd_args]) */
-	F_ID(nd_mid, "method id");
-	LAST_NODE;
-	F_NODE(nd_args, "arguments");
-	break;
-
+    
       case NODE_VCALL:
 	/*function call with no argument
 	 * [nd_mid]*/
@@ -1139,17 +1155,7 @@ static char
 	F_NODE(nd_body, "block argument");
 	break;
 
-      case NODE_DEFN:
-	/*
-	ANN("method definition");
-	ANN("format: def [nd_mid] [nd_defn]; end");
-	ANN("example; def foo; bar; end");
-	*/
-	F_ID(nd_mid, "method name");
-	LAST_NODE;
-	F_NODE(nd_defn, "method definition");
-	break;
-
+    
       case NODE_NIL:
 	/*
 	ANN("nil");
@@ -1201,10 +1207,12 @@ static char
 	F_NODE(nd_ainfo->kw_args, "keyword arguments");
 	F_NODE(nd_ainfo->kw_rest_arg, "keyword rest argument");
 	break;	
-      
+ 
 
 
-	  default:
+
+
+     	  default:
     out = malloc(sizeof(char));
  	*out = 0;
     return out;	
@@ -1213,12 +1221,18 @@ static char
 }
 
 
-
+static char
+*str_new(const char* lit) {
+	size_t l = (strlen(lit) + 1) * sizeof(char);
+	char *out = malloc(l);
+	memcpy(out,lit,l);
+	return out;
+}
 
 static char
 *strappend(char* s1, char* s2, int freec) {
 	size_t l1 = strlen(s1) * sizeof(char);
-	size_t l2 = strlen(s2) * sizeof(char);
+	size_t l2 = (strlen(s2) + 1) * sizeof(char);
 	char *out = malloc(l1+l2);
 	memcpy(out,s1,l1);
 	memcpy(&out[l1],s2,l2);
