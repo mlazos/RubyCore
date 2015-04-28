@@ -901,7 +901,7 @@ rb_parser_dump_tree(NODE *node, int comment)
     );
     dump_node(buf, rb_str_new_cstr("# "), comment, node);
     FILE *fptr;
-    fptr=fopen("RubyCoreLang.txt","w");
+    fptr=fopen("RubyCoreLang.core","w");
     if(fptr==NULL){
 	         printf("Error!");
 	      exit(1);
@@ -967,20 +967,22 @@ static char
 					   }
 
    	  case NODE_SCOPE:
-	scope:
 					   { /*
 	ANN("new scope");
 	ANN("format: [nd_tbl]: local table, [nd_args]: arguments, [nd_body]: body");
 	*/
-    ID *tbl = node->nd_tbl;
+    	
+	out = STR("(lam (");
+    scope:
+	;	
+
+	ID *tbl = node->nd_tbl;
 	int i;
 	int size = 0;
 	if(node->nd_args) {
 	  size = node->nd_args->nd_ainfo->pre_args_num;
 	}
     	
-	
-	out = STR("(lam (");
 	for (i = 0; i < size - 1; i++) {
 	  char* id = ID2STR(tbl[i+1]); 
 	  out = SCATF(out, PADR(id));		
@@ -1000,18 +1002,6 @@ static char
     out = SCATF(out, PAD(RTC(node->nd_body)));
 	return SCATF(out, SCATF(RTC(node->nd_else), STR(" )")));
 			
-      case NODE_ITER:
-	/*method call with block [nd_iter] { [nd_body] }
-	 * If the node is a lambda construction with a block, ignore and treat it as a lambda (goto scope)*/
-	if(!strcmp(ID2STR(node->nd_iter->nd_mid), "lambda")) {
-		node = node->nd_body;
-		goto scope;
-	}	
-	out = SCATF(STR("(with-b "), PAD(RTC(node->nd_iter)));
-	out = SCATF(out, RTC(node->nd_body));	
-	out = SCATF(out, STR(" )"));
-	return out;
-
       case NODE_DEFN:
 	/*
 	ANN("method definition");
@@ -1047,7 +1037,7 @@ static char
 	out = SCATF(STR("(app "), ID2STR(node->nd_mid));
 	return  CLOSP(SCATF(out, RTC(node->nd_args)));
      	
-     case NODE_LASGN:
+      case NODE_LASGN:
 	/*local var :: [nd_vid](lvar) = [nd_value]*/
 	goto asgn;
       
@@ -1061,26 +1051,53 @@ static char
 	 * [nd_vid](current dvar) = [nd_value]*/	
 	asgn:
 	  out = SCATF(STR("(let (["),ID2STR(node->nd_vid));
-	  return SCATF(SCATF(out, RTC(node->nd_value)), STR("])"));
+	  return SCATF(SCATF(out, PADL(RTC(node->nd_value))), STR("]))"));
     
       case NODE_CALL:
+	/*if the method being called is "call", nd_recv is an iter, */	
 	/*method invocation
-	 * [nd_recv].[nd_mid]([nd_args])
-	F_ID(nd_mid, "method id");
-	F_NODE(nd_recv, "receiver");
-	F_NODE(nd_args, "arguments");
-	break;*/
+	 * [nd_recv].[nd_mid]([nd_args])*/
+
+	if(!strcmp(ID2STR(node->nd_mid), "call")) {
+		return CLOSP(SCATF(STR("(app "), RTC(node->nd_recv)));
+	}
+	
+	break;
+
+      case NODE_ITER:
+	/*method call with block [nd_iter] { [nd_body] }
+	 * If the node is a lambda construction with a block, ignore and treat it as a lambda (goto scope)*/
+	if(!strcmp(ID2STR(node->nd_iter->nd_mid), "lambda")) {
+		out = STR("(lam (");
+		node = node->nd_body;
+		goto scope;
+	} 
+	
+	/* If the node is a proc construction using new, ignore and create a proc*/
+	if(!strcmp(ID2STR(node->nd_iter->nd_mid), "new")) {
+		out = STR("(proc (");
+	    node = node->nd_body;
+		goto scope;	
+	}	
+	out = SCATF(STR("(with-b "), PADR(RTC(node->nd_iter)));
+	out = SCATF(out, RTC(node->nd_body));	
+	out = SCATF(out, STR(" )"));
+	return out;
+
+
+
 
       case NODE_VCALL:
 	/*function call with no argument
-	 * [nd_mid]
-	F_ID(nd_mid, "method id");
-	break;*/
+	 * [nd_mid]*/
+	
+	break;
 
       case NODE_ARRAY:
 	/*array constructor
 	 * [ [nd_head], [nd_next].. ] (length: [nd_alen])
 	goto ary;*/
+	break;
 
 	  case NODE_VALUES:
 	/*return arguments
@@ -1091,15 +1108,18 @@ static char
 	LAST_NODE;
 	F_NODE(nd_next, "next element");
 	break;*/
+	break;
 
       case NODE_ZARRAY:
 	/*empty array constructor []*/
+	return STR("()");
 	break;
 
       case NODE_YIELD:
 	/*yield invocation
 	 * yield [nd_head]
 	F_NODE(nd_head, "arguments");*/
+	return CLOSP(SCATF(STR("(yield "), RTC(node->nd_head)));
 	break;
 
      case NODE_LVAR:
@@ -1113,6 +1133,7 @@ static char
 	var:
 	F_ID(nd_vid, "local variable");
 	break;*/
+	break;
 
       case NODE_LIT:
 	/*literal
@@ -1172,7 +1193,7 @@ static char
 	 * 			ANN("example: nil");
 	 * 				
 	break;*/
-
+	break;
       case NODE_TRUE:
 	/*
 	 * 	ANN("true");
@@ -1180,6 +1201,7 @@ static char
 	 * 			ANN("example: true");
 	 * 				
 	break;*/
+	return STR("true");
 
       case NODE_FALSE:
 	/*
@@ -1188,15 +1210,15 @@ static char
 	 * 			ANN("example: false");
 	 * 				
 	break;*/
+	return STR("false");
 
       case NODE_LAMBDA:
 	/*
 	 * 	ANN("lambda expression");
 	 * 		ANN("format: -> [nd_body]");
 	 * 			ANN("example: -> { foo }");
-	 * 				
-	F_NODE(nd_body, "lambda clause");
-	break;*/
+	 */			
+	break;
 
       case NODE_ARGS:
 	/*
@@ -1214,15 +1236,15 @@ static char
 	F_NODE(nd_ainfo->opt_args, "optional arguments");
 	LAST_NODE;
 	F_NODE(nd_ainfo->kw_args, "keyword arguments");
-	F_NODE(nd_ainfo->kw_rest_arg, "keyword rest argument");
-	break;		*/
+	F_NODE(nd_ainfo->kw_rest_arg, "keyword rest argument");*/
+	break;		
 
      	  default:
-    return STR("");	
+    return STR("ERROR");	
 	
 	}
 	
-	return STR("");
+	return STR("ERROR");
 }
 
 

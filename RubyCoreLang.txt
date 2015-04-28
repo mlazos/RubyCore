@@ -1,1 +1,0 @@
-(lam () (do (def func1 (lam (a c) (do (let ([b])    ) ) ) (lam (a) (do (let ([a])  ) )   ) )

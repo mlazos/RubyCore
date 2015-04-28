@@ -1,0 +1,1 @@
+(lam () (do (def func1 (lam (a c) (do (let ([b ERROR])) (yield ERROR)  ERROR ) ) ) (app (lam (a) (do (let ([a ERROR])) ERROR ) ))  (with-b (app (proc (a) (do (let ([a ERROR])) ERROR ) )) (lam (a) (yield ERROR) ) ) ) )
