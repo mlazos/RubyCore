@@ -959,11 +959,11 @@ static char
 	
 	NODE *next = node->nd_next;
 	while(next) {
-	  cur_str = SCATF(cur_str, PAD(RTC(next->nd_head)));
+	  cur_str = SCATF(cur_str, PADL(RTC(next->nd_head)));
 	  next = next->nd_next;
 	}
 
-	return  SCATF(cur_str, STR(")"));
+	return  CLOSP(cur_str);
 					   }
 
    	  case NODE_SCOPE:
@@ -988,19 +988,18 @@ static char
 	  out = SCATF(out, PADR(id));		
 	}
 	
-	if(tbl) out = SCATF(out, ID2STR(tbl[i+1]));
+	if(tbl && size) out = SCATF(out, ID2STR(tbl[i+1]));
 	
 	out = SCATF(out, STR(") "));
 	out = SCATF(out, RTC(node->nd_body));
-	out = SCATF(out, STR(" )"));
-	return out;	
+	return CLOSP(out);	
 					   }
       case NODE_IF: 
 	/*if [nd_cond] then [nd_body] else [nd_else]*/
 
 	out = SCATF(STR("(if "), RTC(node->nd_cond));
     out = SCATF(out, PAD(RTC(node->nd_body)));
-	return SCATF(out, SCATF(RTC(node->nd_else), STR(" )")));
+	return CLOSP(SCATF(out, RTC(node->nd_else)));
 			
       case NODE_DEFN:
 	/*
@@ -1010,8 +1009,7 @@ static char
 	*/
 	out = SCATF(STR("(def "), PADR(ID2STR(node->nd_mid)));
  	out = SCATF(out, RTC(node->nd_defn));
-	out = SCATF(out, STR(" )"));
-	return out;
+	return CLOSP(out);
 	
 	 	  case NODE_BREAK:
 	/*break [nd_stts]*/
@@ -1035,7 +1033,7 @@ static char
 	/*function call
 	 * [nd_mid]([nd_args]) */
 	out = SCATF(STR("(app "), ID2STR(node->nd_mid));
-	return  CLOSP(SCATF(out, RTC(node->nd_args)));
+	return  CLOSP(SCATF(out, PADL(RTC(node->nd_args))));
      	
       case NODE_LASGN:
 	/*local var :: [nd_vid](lvar) = [nd_value]*/
@@ -1081,7 +1079,7 @@ static char
 	}	
 	out = SCATF(STR("(with-b "), PADR(RTC(node->nd_iter)));
 	out = SCATF(out, RTC(node->nd_body));	
-	out = SCATF(out, STR(" )"));
+	out = CLOSP(out);
 	return out;
 
 
@@ -1096,7 +1094,15 @@ static char
       case NODE_ARRAY:
 	/*array constructor
 	 * [ [nd_head], [nd_next].. ] (length: [nd_alen])
-	goto ary;*/
+	goto ary;*/;
+
+	out = SCATF(STR("("),RTC(node->nd_head));
+	NODE *next = node->nd_next;
+	while(next) {
+	  out = SCATF(out, PADL(RTC(next->nd_head)));
+	  next = next->nd_next; 
+	}
+	return CLOSP(out);
 	break;
 
 	  case NODE_VALUES:
@@ -1108,6 +1114,7 @@ static char
 	LAST_NODE;
 	F_NODE(nd_next, "next element");
 	break;*/
+
 	break;
 
       case NODE_ZARRAY:
@@ -1120,20 +1127,20 @@ static char
 	 * yield [nd_head]
 	F_NODE(nd_head, "arguments");*/
 	return CLOSP(SCATF(STR("(yield "), RTC(node->nd_head)));
-	break;
 
-     case NODE_LVAR:
+      case NODE_LVAR:
   	/*local variable reference
 	 * 	 * [nd_vid](lvar)
 	goto var;*/
-      case NODE_DVAR:
+      
+	  case NODE_DVAR:
 	/*dynamic variable reference
 	 * 	 * 1.times{ x = 1; x }
 	goto var;
 	var:
 	F_ID(nd_vid, "local variable");
 	break;*/
-	break;
+	return ID2STR(node->nd_vid);
 
       case NODE_LIT:
 	/*literal
@@ -1145,6 +1152,16 @@ static char
 	  lit:
 	F_LIT(nd_lit, "literal");
 	break;*/
+	switch(TYPE(node->nd_lit)) {
+	    case T_STRING:
+	  return STR(StringValuePtr(node->nd_lit));
+	  break;
+	    case T_FIXNUM: {
+	  int lit = FIX2INT(node->nd_lit);
+	  asprintf(&out,"%d",lit);
+	  return out;	
+					   }
+	}
 
       case NODE_ARGSCAT:
 	/*

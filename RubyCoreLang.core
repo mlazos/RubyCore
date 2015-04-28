@@ -1,1 +1,1 @@
-(lam () (do (def func1 (lam (a c) (do (let ([b ERROR])) (yield ERROR)  ERROR ) ) ) (app (lam (a) (do (let ([a ERROR])) ERROR ) ))  (with-b (app (proc (a) (do (let ([a ERROR])) ERROR ) )) (lam (a) (yield ERROR) ) ) ) )
+(lam () (do (def func1 (lam (a c) (do (let ([b 5])) (yield (a)) h))) (app (lam (a) (do (let ([a 3])) (ret 3)))) (let ([x (proc (a b) (do (let ([a 3])) 3))])) (app x) (with-b (app func1 ((5 4))) (lam (a) a))))
