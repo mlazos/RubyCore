@@ -1,6 +1,11 @@
 #lang racket
 (require redex)
 
+;qs for Stevie
+;any other way to output other than list?
+;final configuration finishing?
+;method of return acceptable?
+
 (define-language ruby-core
   ;atomic expressions
   (ae number
@@ -10,16 +15,25 @@
       (list e ... empty)
       (lam (x ...) e)
       (proc (x ...) e))
-  ;complex expressions
   (ce (do e ...)
       (+ e ...)
       (if e e e)
       ;apply
-      (app e (e ...))
+      (app e e ...)
       ;apply with block
       (app-b e e)
       (ret e)
       (let ((x e) ...) e))
+  ;contexts         
+  (E (do hole e ...)
+      (+ hole e ...)
+      (if hole e e)
+      ;apply
+      (app hole e ...)
+      ;apply with block
+      (app-b hole e)
+      (ret hole)
+      (let ((x hole) ...) e))
   ;all expressions
   (e ce
      ae
@@ -27,9 +41,9 @@
   ;configuration definitions
   (sto ((x ae) ...))
   (env ((x x) ...))
-  (kont (k-do x e env kont) ;keep environment if do
+  (kont (k-do E env kont) ;keep environment if do
         (k-ret kont) ;originating from a block call
-        (k x e env kont) ;normal control point 
+        (k E env kont) ;normal control point 
         halt) ;base case
   (CF (e env sto kont))
   (x variable-not-otherwise-mentioned))  
@@ -43,19 +57,16 @@
    ;(--> (ae env sto halt)
    
    ;atomic expression - call current continuation
-   (--> (ae env sto (k x e env_k kont))
-        (e ((x x_a) . env_k) ((x_a ae) . sto) kont)
-        (where x_a ,(gensym)))
+   (--> (ae env sto (k E env_k kont))
+        ((in-hole E ae) env sto kont))
    (--> (ae env sto (k-do x e env_k kont))
-        (e ((x x_a) . env) ((x_a ae) . sto) kont)
-        (where x_a ,(gensym)))
+        ((in-hole E ae) env_k sto kont))
    
    ;id lookup
-   (--> (x_1 ((x_2 x_3) ...) sto kont)
-        (ae_ans ((x_2 x_3) ...) sto kont)
+   (--> (x_1 env sto kont)
+        (ae_ans env sto kont)
         ;(side-condition (member (term x) (term env)))
-        (where x_ans (env-lookup x_1 ((x_2 x_3) ...)))
-        (where ae_ans (sto-lookup x_ans sto)))
+        (where ae_ans (lookup x_1 env sto)))
    
    ;if 
    (--> ((if #t e_t e_f) env sto kont)
@@ -65,23 +76,26 @@
    (--> ((if ce e_t e_f) env sto kont)
         (ce env sto kont_new)
         (where kont_new (gen-kont (if ce e_t e_f) env kont)))   
-   (--> ((if x e_t e_f) env sto kont)
-        ((if ae_new e_t e_f) env sto kont)
-        (where ae_new (lookup x env sto)))
    
    ;let            
+   ;; handle case where bind exp needs to be evaluated
    (--> ((let ((x e)) e_body) env sto kont)
-        (e env sto (x e_body env kont)))   
-   (--> ((app e_f (e_1 ...)) env sto kont)
-        (e_f env sto kont_new)
-        (where kont_new (gen-kont (app e_f (e_1 ...)) env kont)))
+        (e env sto (e env kont_new))
+        (where kont_new (gen-kont (let ((x e)) e_body) env kont)))
+   ;; handle binding case
+   (--> ((let ((x ae)) e_body) ((x_1 x_2) ...) ((x_3 ae_1) ...) kont)
+        (e_body ((x addr) (x_1 x_2) ...) ((addr ae) (x_3 ae_1) ...) kont)
+        (where addr ,(gensym)))
+   
+   ;app
+   (--> ((app e_1 e_2 ...) env sto kont)
+        (e_1 env sto kont_new)
+        (where kont_new (gen-kont (app e_1 e_2 ...) env kont)))
    
    ;do
    (--> ((do e_1 e_2 ...) env sto kont)
         (e_1 env sto kont_new)
-        (where kont_new (gen-kont (do e_1 e_2 ...) env kont)))   
-   (--> ((do) env sto kont)
-        (e env sto kont))
+        (where kont_new (gen-kont (do e_1 e_2 ...) env kont)))
    
    ;return
    (--> ((ret ae) env sto (k-ret kont))
@@ -100,14 +114,14 @@
 
 (define-metafunction ruby-core
   gen-kont : e env kont -> kont  
-  [(gen-kont (app e_f (e_1 ...)) env kont)
-   ,(let ((s (gensym))) (term (k ,s (app ,s (e_1 ...)) env kont)))]
+  [(gen-kont (app e_1 e_2 ...) env kont)
+   (k (app hole e_2 ...) env kont)]
   [(gen-kont (do e_1 e_2 ...) env kont)
-   ,(let ((s (gensym))) (term (k-do ,s (do e_2 ...) env kont)))]
+   (k-do (do e_2 ...) env kont)] ;remove first expression
   [(gen-kont (if e e_t e_f) env kont)
-   ,(let ((s (gensym))) (term (k ,s (if ,s e_t e_f) env kont)))]
+   (k (if hole e_t e_f) env kont)]
   [(gen-kont (ret ce) env kont)
-   ,(let ((s (gensym))) (term (k ,s (ret ,s) env kont)))])
+   (k (ret hole) env kont)])
 
 (define-metafunction ruby-core
   env-lookup : x env -> x
@@ -130,30 +144,18 @@
 
 
 ;if 
-(test-->> rc-red (term ((if #t 3 5) () () halt)) (term (3 () () halt)))
-(test-->> rc-red (term ((if #f 4 5) () () halt)) (term (5 () () halt)))
-
+(test--> rc-red (term ((if #t 3 5) () () halt)) (term (3 () () halt)))
+(test--> rc-red (term ((if #f 4 5) () () halt)) (term (5 () () halt)))
+(test--> rc-red (term ((if (if #t #f #t) 4 5) () () halt))
+          (term ((if #t #f #t) () () (k (if hole 4 5) () halt))))
 ;id lookup
-(test-->> rc-red (term (t ((t g123)) ((g123 #t)) halt))
+(test--> rc-red (term (t ((t g123)) ((g123 #t)) halt))
           (term (#t ((t g123)) ((g123 #t)) halt)))
 
+;let binding
+(test--> 
 
 
 
-;test by eye
-(rr (term ((if (if #t #f #t) 4 5) () () halt)))
-(rr (term ((if #t #f #t)
-   ()
-   ()
-   (k g409368 (if g409368 4 5) () halt))))
-(rr (term (#f
-   ()
-   ()
-   (k g409368 (if g409368 4 5) () halt))))
-(rr (term ((if g409368 4 5)
-   ((g409368 g413767))
-   ((g413767 #f))
-   halt)))
-(rr (term ((do t) ((t g123)) ((g123 #f)) halt)))
 
 (test-results)
