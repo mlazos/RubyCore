@@ -166,7 +166,7 @@
           (term (#t ((t g123)) ((g123 #t)) halt)))
 
 ;let binding
-(test--> rc-red (term ((let ((t 5)) t) () () halt)) '())
+(test--> rc-red (term ((let (t 5) t) () () halt)) '())
 
 
 
