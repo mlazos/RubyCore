@@ -2,9 +2,10 @@
 (require redex)
 
 ;qs for Stevie
-;any other way to output other than list?
 ;final configuration finishing?
 ;method of return acceptable?
+;how to search through environments
+;do return last value
 
 (define-language ruby-core
   ;atomic expressions
@@ -23,7 +24,7 @@
       ;apply with block
       (app-b e e)
       (ret e)
-      (let ((x e) ...) e))
+      (let (x e) e))
   ;contexts         
   (E (do hole e ...)
       (+ hole e ...)
@@ -33,7 +34,7 @@
       ;apply with block
       (app-b hole e)
       (ret hole)
-      (let ((x hole) ...) e))
+      (let (x hole) e))
   ;all expressions
   (e ce
      ae
@@ -79,7 +80,7 @@
    
    ;let            
    ;; handle case where bind exp needs to be evaluated
-   (--> ((let ((x e)) e_body) env sto kont)
+   (--> ((let ((x ce)) e_body) env sto kont)
         (e env sto (e env kont_new))
         (where kont_new (gen-kont (let ((x e)) e_body) env kont)))
    ;; handle binding case
@@ -121,7 +122,9 @@
   [(gen-kont (if e e_t e_f) env kont)
    (k (if hole e_t e_f) env kont)]
   [(gen-kont (ret ce) env kont)
-   (k (ret hole) env kont)])
+   (k (ret hole) env kont)]
+  [(gen-kont (let ((x e)) e_body) env kont)
+   (k (let ((x hole)) e_body) env kont)])
 
 (define-metafunction ruby-core
   env-lookup : x env -> x
@@ -142,6 +145,16 @@
   [(lookup x_s env sto )
    (sto-lookup (env-lookup x_s env) sto)])
 
+(define-metafunction ruby-core
+  bound? : x env -> boolean
+  [(bound? x_f ((x_f x_fa) (x_2 x_2a) ...))
+   #t]
+  [(bound? x_f ((x_2 x_2a) (x_3 x_3a) ...))
+   (bound? x_f ((x_3 x_3a) ...))]
+  [(bound? x_f ())
+   #f])
+
+;;tests
 
 ;if 
 (test--> rc-red (term ((if #t 3 5) () () halt)) (term (3 () () halt)))
@@ -153,8 +166,7 @@
           (term (#t ((t g123)) ((g123 #t)) halt)))
 
 ;let binding
-(test--> 
-
+(test--> rc-red (term ((let ((t 5)) t) () () halt)) '())
 
 
 
