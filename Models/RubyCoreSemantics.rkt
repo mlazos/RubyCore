@@ -80,11 +80,11 @@
    
    ;let            
    ;; handle case where bind exp needs to be evaluated
-   (--> ((let ((x ce)) e_body) env sto kont)
+   (--> ((let (x ce) e_body) env sto kont)
         (e env sto (e env kont_new))
-        (where kont_new (gen-kont (let ((x e)) e_body) env kont)))
+        (where kont_new (gen-kont (let (x e) e_body) env kont)))
    ;; handle binding case
-   (--> ((let ((x ae)) e_body) ((x_1 x_2) ...) ((x_3 ae_1) ...) kont)
+   (--> ((let (x ae) e_body) ((x_1 x_2) ...) ((x_3 ae_1) ...) kont)
         (e_body ((x addr) (x_1 x_2) ...) ((addr ae) (x_3 ae_1) ...) kont)
         (where addr ,(gensym)))
    
@@ -123,8 +123,8 @@
    (k (if hole e_t e_f) env kont)]
   [(gen-kont (ret ce) env kont)
    (k (ret hole) env kont)]
-  [(gen-kont (let ((x e)) e_body) env kont)
-   (k (let ((x hole)) e_body) env kont)])
+  [(gen-kont (let (x e) e_body) env kont)
+   (k (let (x hole) e_body) env kont)])
 
 (define-metafunction ruby-core
   env-lookup : x env -> x
