@@ -1,11 +1,6 @@
 #lang racket
 (require redex)
-
-;qs for Stevie
-;final configuration finishing?
-;method of return acceptable?
-;how to search through environments
-;do return last value
+(require test-engine/racket-tests)
 
 (define-language ruby-core
   ;atomic expressions
@@ -14,8 +9,7 @@
       boolean
       empty
       (list e ... empty)
-      (lam (x ...) e)
-      (proc (x ...) e))
+      (clo func env))
   (ce (do e ...)
       (+ e ...)
       (if e e e)
@@ -24,21 +18,24 @@
       ;apply with block
       (app-b e e)
       (ret e)
-      (let (x e) e))
+      (let x e)
+      func
+      x)
+  (func (lam (x ...) e)
+        (proc (x ...) e))
   ;contexts         
   (E (do hole e ...)
       (+ hole e ...)
       (if hole e e)
       ;apply
-      (app hole e ...)
+      (app ae ... hole e ...)
       ;apply with block
       (app-b hole e)
       (ret hole)
-      (let (x hole) e))
+      (let x hole))
   ;all expressions
   (e ce
-     ae
-     x) 
+     ae) 
   ;configuration definitions
   (sto ((x ae) ...))
   (env ((x x) ...))
@@ -49,7 +46,6 @@
   (CF (e env sto kont))
   (x variable-not-otherwise-mentioned))  
 
-(define (rr x) (apply-reduction-relation rc-red x))
 
 (define rc-red
   (reduction-relation
@@ -59,44 +55,88 @@
    
    ;atomic expression - call current continuation
    (--> (ae env sto (k E env_k kont))
-        ((in-hole E ae) env sto kont))
-   (--> (ae env sto (k-do x e env_k kont))
-        ((in-hole E ae) env_k sto kont))
+        ((in-hole E ae) env_k sto kont)
+        cont)
+   (--> (ae env sto (k-do E env_k kont))
+        ((in-hole E ae) env sto kont)
+        cont-do)
+   (--> (ae env sto (k-ret kont)) ;; if ret wasn't called, ignore
+        (ae env sto kont)
+        cont-ret)
+   
+   ;lambdas and procs - create closure
+   (--> (func env sto kont)
+        ((clo func env) env sto kont)
+        func-create)
    
    ;id lookup
-   (--> (x_1 env sto kont)
+   (--> (x env sto kont)
         (ae_ans env sto kont)
-        ;(side-condition (member (term x) (term env)))
-        (where ae_ans (lookup x_1 env sto)))
+        (side-condition (term (bound? x env)))
+        (where ae_ans (lookup x env sto))
+        id-lookup)
    
    ;if 
    (--> ((if #t e_t e_f) env sto kont)
-        (e_t env sto kont))   
+        (e_t env sto kont)
+        if-t)   
    (--> ((if #f e_t e_f) env sto kont)
-        (e_f env sto kont))
+        (e_f env sto kont)
+        if-f)
    (--> ((if ce e_t e_f) env sto kont)
         (ce env sto kont_new)
-        (where kont_new (gen-kont (if ce e_t e_f) env kont)))   
+        (where kont_new (gen-kont (if ce e_t e_f) env kont))
+        if-expr)   
    
    ;let            
    ;; handle case where bind exp needs to be evaluated
-   (--> ((let (x ce) e_body) env sto kont)
-        (e env sto (e env kont_new))
-        (where kont_new (gen-kont (let (x e) e_body) env kont)))
-   ;; handle binding case
-   (--> ((let (x ae) e_body) ((x_1 x_2) ...) ((x_3 ae_1) ...) kont)
-        (e_body ((x addr) (x_1 x_2) ...) ((addr ae) (x_3 ae_1) ...) kont)
-        (where addr ,(gensym)))
+   (--> ((let x ce) env sto kont)
+        (ce env sto kont_new)
+        (where kont_new (gen-kont (let x e) env kont))
+        let-expr)
+   ;; handle new binding case
+   (--> ((let x ae) ((x_1 x_2) ...) ((x_3 ae_1) ...) kont)
+        (ae ((x x_new) (x_1 x_2) ...) ((x_new ae) (x_3 ae_1) ...) kont)
+        (side-condition (not (term (bound? x ((x_1 x_2) ...)))))
+        (where x_new ,(gensym))
+        let-bind)
+   ;; handle update binding case
+   (--> ((let x ae) env sto kont)
+        (ae env sto_new kont)
+        (side-condition (term (bound? x env)))
+        (where sto_new (update-sto x ae env sto))
+        let-update)
    
    ;app
-   (--> ((app e_1 e_2 ...) env sto kont)
-        (e_1 env sto kont_new)
-        (where kont_new (gen-kont (app e_1 e_2 ...) env kont)))
+   (--> ((app ae ... ce e ...) env sto kont)
+        (ce env sto kont_new)
+        (where kont_new (gen-kont (app ae ... ce e ...) env kont))
+        app-exprs)
+   (--> ((app (clo (lam (x_1 x_2 ...) e_body) 
+                   ((x_id x_loc1) ...)) ae_1 ae_2 ...) 
+         env
+         ((x_loc2 ae_v) ...) kont)
+        ((app (clo (lam (x_2 ...) e_body) 
+                   ((x_1 x_new) (x_id x_loc1) ...)) ae_2 ...) 
+         env
+         ((x_new ae_1) (x_loc2 ae_v) ...) kont)
+        (side-condition (= (length (term (x_1 x_2 ...))) (length (term (ae_1 ae_2 ...)))))
+        (where x_new ,(gensym))
+        app-lam)
+   (--> ((app (clo (lam () e_body) env_c)) env sto kont)
+        (e_body env_c sto kont)
+        app-lam-no-args)
+   
+                                               
    
    ;do
-   (--> ((do e_1 e_2 ...) env sto kont)
-        (e_1 env sto kont_new)
-        (where kont_new (gen-kont (do e_1 e_2 ...) env kont)))
+   (--> ((do ce e_1 ...) env sto kont)
+        (ce env sto kont_new)
+        (where kont_new (gen-kont (do ce e_1 ...) env kont)))
+   (--> ((do ae e_1 e_2 ...) env sto kont)
+        ((do e_1 e_2 ...) env sto kont))
+   (--> ((do ae) env sto kont)
+        (ae env sto kont))
    
    ;return
    (--> ((ret ae) env sto (k-ret kont))
@@ -113,19 +153,21 @@
    
    ))
 
+;;------------------ metafunctions -----------------
 (define-metafunction ruby-core
   gen-kont : e env kont -> kont  
-  [(gen-kont (app e_1 e_2 ...) env kont)
-   (k (app hole e_2 ...) env kont)]
+  [(gen-kont (app ae ... ce e ...) env kont)
+   (k (app ae ... hole e ...) env kont)]
   [(gen-kont (do e_1 e_2 ...) env kont)
-   (k-do (do e_2 ...) env kont)] ;remove first expression
+   (k-do (do hole e_2 ...) env kont)] ;remove first expression
   [(gen-kont (if e e_t e_f) env kont)
    (k (if hole e_t e_f) env kont)]
   [(gen-kont (ret ce) env kont)
    (k (ret hole) env kont)]
-  [(gen-kont (let (x e) e_body) env kont)
-   (k (let (x hole) e_body) env kont)])
+  [(gen-kont (let x e) env kont)
+   (k (let x hole) env kont)])
 
+;env can't be empty if this is called
 (define-metafunction ruby-core
   env-lookup : x env -> x
   [(env-lookup x_s ((x_1 x_2) (x_3 x_4) ...))
@@ -133,17 +175,33 @@
         (term x_2)
         (term (env-lookup (term x_s) (term ((x_3 x_4) ...)))))])
 
+;sto can't be empty due to side-cond
 (define-metafunction ruby-core
   sto-lookup : x sto -> ae
   [(sto-lookup x_s ((x_1 ae_1) (x_2 ae_2) ...))
    ,(if (equal? (term x_s) (term x_1))
         (term ae_1)
-        (term (sto-lookup (term x_s) (term ((x_2 ae_2) ...)))))])
+        (term (sto-lookup x_s ((x_2 ae_2) ...))))])
 
+;env can't be empty due to side-cond
 (define-metafunction ruby-core
   lookup : x env sto -> ae
   [(lookup x_s env sto )
    (sto-lookup (env-lookup x_s env) sto)])
+
+;store can't be empty due to side-cond
+(define-metafunction ruby-core
+  update-sto : x ae env sto -> sto
+  [(update-sto x ae env sto)
+   (update-helper (env-lookup x env) ae sto)])
+
+;store can't be empty if this is called due to a side-cond
+(define-metafunction ruby-core
+  update-helper : x ae sto -> sto
+[(update-helper x ae ((x ae_1) (x_2 ae_2) ...))
+ ((x ae) (x_2 ae_2) ...)]
+[(update-helper x ae ((x_1 ae_1) (x_2 ae_2) ...))
+ (update-helper x ae ((x_2 ae_2) ...))])
 
 (define-metafunction ruby-core
   bound? : x env -> boolean
@@ -154,7 +212,31 @@
   [(bound? x_f ())
    #f])
 
-;;tests
+;output function
+(define-metafunction ruby-core
+  OF : CF -> ae
+  [(OF (ae env sto kont)) ae])
+
+
+
+;;testing functions
+
+;short-hand to run rr
+(define (rr x) (apply-reduction-relation rc-red x))
+;;short-hand to test rr
+(define (tc x y) (let ([final-configs (apply-reduction-relation* rc-red x)])
+  (and (= (length final-configs) 1) 
+          (equal? (term (OF ,(first final-configs))) y))))
+
+;;test cases
+;atomic expressions
+(test--> rc-red (term (5 () () (k (do hole 5) () halt)))
+         (term ((do 5 5) () () halt)))
+(test--> rc-red (term ("fg" () () (k (do hole 5) () halt)))
+         (term ((do "fg" 5) () () halt)))
+(test--> rc-red (term ("fg" () () (k (if hole 4 5) () halt)))
+         (term ((if "fg" 4 5) () () halt)))
+
 
 ;if 
 (test--> rc-red (term ((if #t 3 5) () () halt)) (term (3 () () halt)))
@@ -165,9 +247,43 @@
 (test--> rc-red (term (t ((t g123)) ((g123 #t)) halt))
           (term (#t ((t g123)) ((g123 #t)) halt)))
 
-;let binding
-(test--> rc-red (term ((let (t 5) t) () () halt)) '())
+;new binding
+(check-expect (tc (term ((do (let x 5) x) () () halt)) (term 5))
+              true)
+
+
+;update binding
+(test--> rc-red (term ((let t 5) ((t g123)) ((g123 3)) halt))
+         (term (5 ((t g123)) ((g123 5)) halt)))
+
+;app
+(check-expect (tc (term ((app (lam (x) x) 5) () () halt)) (term 5))
+              #t)
+(check-expect (tc (term ((do (let y 5) (let x (lam (y) y))
+                           (do (app x 7))) () () halt))
+                  (term 7))
+              #t)
+
+(test-->> rc-red (term ((app (lam () 5)) () () halt))
+         (term (5 () () halt)))
+
+(check-expect (tc (term ((app (lam (x y) y) 4 5) () () halt))
+    (term 5))
+              #t)
+
+                     
+
+
+;do
+(test--> rc-red (term ((do 5) () () halt)) (term (5 () () halt)))
+(test--> rc-red (term ((do 5 (if #t 3 4)) () () halt))
+         (term ((do (if #t 3 4)) () () halt)))
+(test-->> rc-red (term ((do (if #t 3 4) 5) () () halt))
+         (term (5 () () halt)))
+(test--> rc-red (term ((do 5 5) () () halt))
+         (term ((do 5) () () halt)))
 
 
 
 (test-results)
+(test)
