@@ -173,7 +173,7 @@
   [(env-lookup x_s ((x_1 x_2) (x_3 x_4) ...))
    ,(if (equal? (term x_s) (term x_1))
         (term x_2)
-        (term (env-lookup (term x_s) (term ((x_3 x_4) ...)))))])
+        (term (env-lookup x_s ((x_3 x_4) ...))))])
 
 ;sto can't be empty due to side-cond
 (define-metafunction ruby-core
@@ -236,6 +236,8 @@
          (term ((do "fg" 5) () () halt)))
 (test--> rc-red (term ("fg" () () (k (if hole 4 5) () halt)))
          (term ((if "fg" 4 5) () () halt)))
+(test--> rc-red (term ((lam (x) x) ((t g123)) () halt))
+         (term ((clo (lam (x) x) ((t g123))) ((t g123)) () halt)))
 
 
 ;if 
@@ -243,9 +245,14 @@
 (test--> rc-red (term ((if #f 4 5) () () halt)) (term (5 () () halt)))
 (test--> rc-red (term ((if (if #t #f #t) 4 5) () () halt))
           (term ((if #t #f #t) () () (k (if hole 4 5) () halt))))
+
 ;id lookup
 (test--> rc-red (term (t ((t g123)) ((g123 #t)) halt))
           (term (#t ((t g123)) ((g123 #t)) halt)))
+(test--> rc-red (term (t ((x g124) (t g123)) ((g123 #t) (g124 0)) halt))
+         (term (#t ((x g124) (t g123)) ((g123 #t) (g124 0)) halt)))
+
+
 
 ;new binding
 (check-expect (tc (term ((do (let x 5) x) () () halt)) (term 5))
@@ -255,6 +262,8 @@
 ;update binding
 (test--> rc-red (term ((let t 5) ((t g123)) ((g123 3)) halt))
          (term (5 ((t g123)) ((g123 5)) halt)))
+(test-->> rc-red (term ((do (let t 5) (let t 6)) ((t g123)) ((g123 0)) halt))
+          (term (6 ((t g123)) ((g123 6)) halt)))
 
 ;app
 (check-expect (tc (term ((app (lam (x) x) 5) () () halt)) (term 5))

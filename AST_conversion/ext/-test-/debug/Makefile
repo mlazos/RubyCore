@@ -139,13 +139,13 @@ LIBS =   -lpthread -ldl -lobjc
 ORIG_SRCS = init.c inspector.c profile_frames.c
 SRCS = $(ORIG_SRCS) 
 OBJS = init.o inspector.o profile_frames.o
-HDRS = 
+HDRS = $(srcdir)/extconf.h
 TARGET = debug
 TARGET_NAME = debug
 TARGET_ENTRY = Init_$(TARGET_NAME)
 DLLIB = $(TARGET).bundle
 EXTSTATIC = 
-STATIC_LIB = 
+STATIC_LIB = $(TARGET).a
 
 TIMESTAMP_DIR = $(extout)/.timestamp
 BINDIR        = $(extout)/bin
@@ -259,7 +259,11 @@ $(RUBYARCHDIR)/$(DLLIB): $(OBJS) Makefile $(TIMESTAMP_DIR)/.RUBYARCHDIR.-.-test-
 	$(Q) $(LDSHARED) -o $@ $(OBJS) $(LIBPATH) $(DLDFLAGS) $(LOCAL_LIBS) $(LIBS)
 	$(Q) $(POSTLINK)
 
-
+$(STATIC_LIB): $(OBJS)
+	-$(Q)$(RM) $(@)
+	$(ECHO) linking static-library $(@)
+	$(Q) $(AR) cru $@ $(OBJS)
+	-$(Q)ranlib $(@) 2> /dev/null || true
 
 ###
 $(OBJS): $(RUBY_EXTCONF_H)

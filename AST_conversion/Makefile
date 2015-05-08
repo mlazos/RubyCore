@@ -170,8 +170,8 @@ IFCHANGE      = $(srcdir)/tool/ifchange
 SET_LC_MESSAGES = env LC_MESSAGES=C
 OBJDUMP       = 
 OBJCOPY       = :
-VCS           = git
-VCSUP         = $(VCS) pull $(GITPULLOPTIONS)
+VCS           = echo cannot
+VCSUP         = $(VCS)
 DTRACE        = dtrace
 DTRACE_EXT    = d
 DTRACE_OBJ    = 

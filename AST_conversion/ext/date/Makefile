@@ -139,13 +139,13 @@ LIBS =   -lpthread -ldl -lobjc
 ORIG_SRCS = date_core.c date_parse.c date_strftime.c date_strptime.c
 SRCS = $(ORIG_SRCS) 
 OBJS = date_core.o date_parse.o date_strftime.o date_strptime.o
-HDRS = $(srcdir)/date_tmx.h
+HDRS = $(srcdir)/date_tmx.h $(srcdir)/extconf.h
 TARGET = date_core
 TARGET_NAME = date_core
 TARGET_ENTRY = Init_$(TARGET_NAME)
 DLLIB = $(TARGET).bundle
 EXTSTATIC = 
-STATIC_LIB = 
+STATIC_LIB = $(TARGET).a
 
 TIMESTAMP_DIR = $(extout)/.timestamp
 BINDIR        = $(extout)/bin
@@ -270,7 +270,11 @@ $(RUBYARCHDIR)/$(DLLIB): $(OBJS) Makefile $(TIMESTAMP_DIR)/.RUBYARCHDIR.time
 	$(Q) $(LDSHARED) -o $@ $(OBJS) $(LIBPATH) $(DLDFLAGS) $(LOCAL_LIBS) $(LIBS)
 	$(Q) $(POSTLINK)
 
-
+$(STATIC_LIB): $(OBJS)
+	-$(Q)$(RM) $(@)
+	$(ECHO) linking static-library $(@)
+	$(Q) $(AR) cru $@ $(OBJS)
+	-$(Q)ranlib $(@) 2> /dev/null || true
 
 ###
 $(OBJS): $(RUBY_EXTCONF_H)

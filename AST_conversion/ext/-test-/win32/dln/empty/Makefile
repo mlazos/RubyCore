@@ -13,7 +13,7 @@ NULLCMD = :
 #### Start of system configuration section. ####
 top_srcdir = $(topdir)/.
 srcdir = ./ext
-topdir = /Users/Mike/RubyCore
+topdir = /Users/Mike/RubyCore/AST_conversion
 hdrdir = ../../../../.././include
 arch_hdrdir = $(extout)/include/$(arch)
 PATH_SEPARATOR = :

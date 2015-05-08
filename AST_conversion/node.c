@@ -1048,8 +1048,8 @@ static char
 	/*dynamic var in current scope (ex. 1.times{ x = foo })
 	 * [nd_vid](current dvar) = [nd_value]*/	
 	asgn:
-	  out = SCATF(STR("(let (["),ID2STR(node->nd_vid));
-	  return SCATF(SCATF(out, PADL(RTC(node->nd_value))), STR("]))"));
+	  out = SCATF(STR("(let "),ID2STR(node->nd_vid));
+	  return SCATF(SCATF(out, PADL(RTC(node->nd_value))), STR(")"));
     
       case NODE_CALL:
 	/*if the method being called is "call", nd_recv is an iter, */	
@@ -1077,9 +1077,10 @@ static char
 	    node = node->nd_body;
 		goto scope;	
 	}	
-	out = SCATF(STR("(with-b "), PADR(RTC(node->nd_iter)));
-	out = SCATF(out, RTC(node->nd_body));	
-	out = CLOSP(out);
+	out = SCATF(STR("(app-b "), ID2STR(node->nd_body->nd_mid));
+	return  CLOSP(SCATF(out, PADL(RTC(node->nd_body->nd_args))));
+    
+
 	return out;
 
 

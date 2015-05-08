@@ -139,13 +139,13 @@ LIBS =  -lcrypto  -lpthread -ldl -lobjc
 ORIG_SRCS = sha1.c sha1init.c sha1ossl.c
 SRCS = $(ORIG_SRCS) sha1init.c sha1.c
 OBJS = sha1init.o sha1.o
-HDRS = $(srcdir)/sha1.h $(srcdir)/sha1ossl.h
+HDRS = $(srcdir)/extconf.h $(srcdir)/sha1.h $(srcdir)/sha1ossl.h
 TARGET = sha1
 TARGET_NAME = sha1
 TARGET_ENTRY = Init_$(TARGET_NAME)
 DLLIB = $(TARGET).bundle
 EXTSTATIC = 
-STATIC_LIB = 
+STATIC_LIB = $(TARGET).a
 
 TIMESTAMP_DIR = $(extout)/.timestamp
 BINDIR        = $(extout)/bin
@@ -259,7 +259,11 @@ $(RUBYARCHDIR)/$(DLLIB): $(OBJS) Makefile $(TIMESTAMP_DIR)/.RUBYARCHDIR.-.digest
 	$(Q) $(LDSHARED) -o $@ $(OBJS) $(LIBPATH) $(DLDFLAGS) $(LOCAL_LIBS) $(LIBS)
 	$(Q) $(POSTLINK)
 
-
+$(STATIC_LIB): $(OBJS)
+	-$(Q)$(RM) $(@)
+	$(ECHO) linking static-library $(@)
+	$(Q) $(AR) cru $@ $(OBJS)
+	-$(Q)ranlib $(@) 2> /dev/null || true
 
 ###
 $(OBJS): $(RUBY_EXTCONF_H)
