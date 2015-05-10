@@ -427,7 +427,7 @@ Copyright (C) 2012 Free Software Foundation, Inc.
 This config.status script is free software; the Free Software Foundation
 gives unlimited permission to copy, distribute and modify it."
 
-ac_pwd='/Users/Mike/RubyCore'
+ac_pwd='/Users/Mike/RubyCore/AST_conversion'
 srcdir='.'
 INSTALL='/usr/bin/install -c'
 MKDIR_P='mkdir -p'
@@ -799,8 +799,8 @@ S["RUBY_PROGRAM_VERSION"]="2.2.2"
 S["TEENY"]="0"
 S["MINOR"]="2"
 S["MAJOR"]="2"
-S["HAVE_BASERUBY"]="yes"
-S["BASERUBY"]="ruby --disable=gems"
+S["HAVE_BASERUBY"]="no"
+S["BASERUBY"]="echo executable host ruby is required.  use --with-baseruby option.; false"
 S["target_alias"]=""
 S["host_alias"]=""
 S["build_alias"]=""

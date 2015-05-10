@@ -139,13 +139,13 @@ LIBS =   -lpthread -ldl -lobjc
 ORIG_SRCS = eventids1.c eventids2.c eventids2table.c ripper.c
 SRCS = $(ORIG_SRCS) ripper.c
 OBJS = ripper.o
-HDRS = 
+HDRS = $(srcdir)/extconf.h
 TARGET = ripper
 TARGET_NAME = ripper
 TARGET_ENTRY = Init_$(TARGET_NAME)
 DLLIB = $(TARGET).bundle
 EXTSTATIC = 
-STATIC_LIB = 
+STATIC_LIB = $(TARGET).a
 
 TIMESTAMP_DIR = $(extout)/.timestamp
 BINDIR        = $(extout)/bin
@@ -295,7 +295,11 @@ $(RUBYARCHDIR)/$(DLLIB): $(OBJS) Makefile $(TIMESTAMP_DIR)/.RUBYARCHDIR.time
 	$(Q) $(LDSHARED) -o $@ $(OBJS) $(LIBPATH) $(DLDFLAGS) $(LOCAL_LIBS) $(LIBS)
 	$(Q) $(POSTLINK)
 
-
+$(STATIC_LIB): $(OBJS)
+	-$(Q)$(RM) $(@)
+	$(ECHO) linking static-library $(@)
+	$(Q) $(AR) cru $@ $(OBJS)
+	-$(Q)ranlib $(@) 2> /dev/null || true
 
 ###
 $(OBJS): $(RUBY_EXTCONF_H)
@@ -320,7 +324,7 @@ ripper.o: ripper.c
 	@$(RM) y.tab.c
 
 all: check
-static: all
+static: check
 
 ripper.y: $(srcdir)/tools/preproc.rb $(top_srcdir)/parse.y
 	$(ECHO) extracting $@ from $(top_srcdir)/parse.y

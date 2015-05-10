@@ -139,13 +139,13 @@ LIBS =   -lpthread -ldl -lobjc
 ORIG_SRCS = psych.c psych_emitter.c psych_parser.c psych_to_ruby.c psych_yaml_tree.c
 SRCS = $(ORIG_SRCS) psych.c psych_emitter.c psych_parser.c psych_to_ruby.c psych_yaml_tree.c api.c dumper.c emitter.c loader.c parser.c reader.c scanner.c writer.c
 OBJS = psych.o psych_emitter.o psych_parser.o psych_to_ruby.o psych_yaml_tree.o api.o dumper.o emitter.o loader.o parser.o reader.o scanner.o writer.o
-HDRS = $(srcdir)/psych.h $(srcdir)/psych_emitter.h $(srcdir)/psych_parser.h $(srcdir)/psych_to_ruby.h $(srcdir)/psych_yaml_tree.h
+HDRS = $(srcdir)/extconf.h $(srcdir)/psych.h $(srcdir)/psych_emitter.h $(srcdir)/psych_parser.h $(srcdir)/psych_to_ruby.h $(srcdir)/psych_yaml_tree.h
 TARGET = psych
 TARGET_NAME = psych
 TARGET_ENTRY = Init_$(TARGET_NAME)
 DLLIB = $(TARGET).bundle
 EXTSTATIC = 
-STATIC_LIB = 
+STATIC_LIB = $(TARGET).a
 
 TIMESTAMP_DIR = $(extout)/.timestamp
 BINDIR        = $(extout)/bin
@@ -475,7 +475,11 @@ $(RUBYARCHDIR)/$(DLLIB): $(OBJS) Makefile $(TIMESTAMP_DIR)/.RUBYARCHDIR.time
 	$(Q) $(LDSHARED) -o $@ $(OBJS) $(LIBPATH) $(DLDFLAGS) $(LOCAL_LIBS) $(LIBS)
 	$(Q) $(POSTLINK)
 
-
+$(STATIC_LIB): $(OBJS)
+	-$(Q)$(RM) $(@)
+	$(ECHO) linking static-library $(@)
+	$(Q) $(AR) cru $@ $(OBJS)
+	-$(Q)ranlib $(@) 2> /dev/null || true
 
 ###
 $(OBJS): $(RUBY_EXTCONF_H)

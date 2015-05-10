@@ -13,7 +13,7 @@ NULLCMD = :
 #### Start of system configuration section. ####
 top_srcdir = $(topdir)/.
 srcdir = ./ext
-topdir = /Users/Mike/RubyCore
+topdir = /Users/Mike/RubyCore/AST_conversion
 hdrdir = ../../../../.././include
 arch_hdrdir = $(extout)/include/$(arch)
 PATH_SEPARATOR = :
@@ -88,7 +88,7 @@ DEFS     =
 CPPFLAGS =  -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT $(DEFS) $(cppflags)
 CXXFLAGS = $(CCDLFLAGS) $(cxxflags) $(ARCH_FLAG)
 ldflags  = -L. -fstack-protector
-dldflags = -Wl,-undefined,dynamic_lookup -Wl,-multiply_defined,suppress -Wl,-undefined,dynamic_lookup -Wl,-multiply_defined,suppress  
+dldflags = -Wl,-undefined,dynamic_lookup -Wl,-multiply_defined,suppress 
 ARCH_FLAG = 
 DLDFLAGS = $(ldflags) $(dldflags) $(ARCH_FLAG)
 LDSHARED = $(CC) -dynamic -bundle

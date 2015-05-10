@@ -85,10 +85,10 @@ CCDLFLAGS = -fno-common
 CFLAGS   = $(CCDLFLAGS) $(cflags)  -pipe $(ARCH_FLAG)
 INCFLAGS = -I. -I$(arch_hdrdir) -I$(hdrdir) -I$(srcdir)
 DEFS     = 
-CPPFLAGS =  -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT $(DEFS) $(cppflags)
+CPPFLAGS = -DHAVE_RUBY_NATIVE_THREAD_P -DHAVE_RB_ERRINFO -DHAVE_RB_SAFE_LEVEL -DHAVE_RB_HASH_LOOKUP -DHAVE_RB_PROC_NEW -DHAVE_RB_OBJ_UNTRUST -DHAVE_RB_OBJ_TAINT -DHAVE_RB_SET_SAFE_LEVEL_FORCE -DHAVE_RB_SOURCEFILE -DHAVE_RB_THREAD_CHECK_TRAP_PENDING -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -D_DARWIN_UNLIMITED_SELECT -D_REENTRANT $(DEFS) $(cppflags)
 CXXFLAGS = $(CCDLFLAGS) $(cxxflags) $(ARCH_FLAG)
 ldflags  = -L. -fstack-protector
-dldflags = -Wl,-undefined,dynamic_lookup -Wl,-multiply_defined,suppress -Wl,-undefined,dynamic_lookup -Wl,-multiply_defined,suppress  
+dldflags = -Wl,-undefined,dynamic_lookup -Wl,-multiply_defined,suppress 
 ARCH_FLAG = 
 DLDFLAGS = $(ldflags) $(dldflags) $(ARCH_FLAG)
 LDSHARED = $(CC) -dynamic -bundle
@@ -123,7 +123,7 @@ TOUCH = exit >
 #### End of system configuration section. ####
 
 preload = 
-CLEANFILES = mkmf.log
+CLEANFILES = mkmf.log config_list
 DISTCLEANFILES = 
 
 all install static install-so install-rb: Makefile

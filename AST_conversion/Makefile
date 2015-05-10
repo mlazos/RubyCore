@@ -25,8 +25,8 @@ PURIFY =
 AUTOCONF = autoconf
 
 MKFILES = Makefile GNUmakefile
-BASERUBY = ruby --disable=gems
-HAVE_BASERUBY = yes
+BASERUBY = echo executable host ruby is required.  use --with-baseruby option.; false
+HAVE_BASERUBY = no
 TEST_RUNNABLE = yes
 CROSS_COMPILING = no
 DOXYGEN = 
@@ -170,8 +170,8 @@ IFCHANGE      = $(srcdir)/tool/ifchange
 SET_LC_MESSAGES = env LC_MESSAGES=C
 OBJDUMP       = 
 OBJCOPY       = :
-VCS           = git
-VCSUP         = $(VCS) pull $(GITPULLOPTIONS)
+VCS           = echo cannot
+VCSUP         = $(VCS)
 DTRACE        = dtrace
 DTRACE_EXT    = d
 DTRACE_OBJ    = 
