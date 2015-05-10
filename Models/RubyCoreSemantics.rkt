@@ -70,6 +70,16 @@
         (ae env sto kont)
         cont-ret)
    
+   ;plus
+   (--> ((+ number ... ce e ...) env sto kont)
+        (ce env sto kont_new)
+        (where kont_new (gen-kont (+ number ... ce e ...) env kont)))
+   (--> ((+ number_0 number_1 number_2 ...) env sto kont)
+        (number_ans env sto kont)
+        (where number_ans (term (sum (number_0 number_1 number_2 ...)))))
+         
+         
+   
    ;lambdas and procs - create closure
    (--> (func env sto kont)
         ((clo func env) env sto kont)
@@ -293,9 +303,18 @@
   [(gen-kont (app-b ae_f (ae_1 ... ce e_1 ...) e_2) env kont)
    (k (app-b ae_f (ae_1 ... hole e_1 ...) e_2) env kont)]
   [(gen-kont (app-b ae_f (ae_a ...) ce) env kont)
-   (k (app-b ae_f (ae_a ...) hole) env kont)])
+   (k (app-b ae_f (ae_a ...) hole) env kont)]
+  ;add
+  [(gen-kont (+ number ... ce e ...) env kont)
+   (k (+ number ... hole e ...) env kont)])
   
-
+;summing metafunction
+(define-metafunction ruby-core
+  sum : ce -> number
+  [(sum (+ number_0 number_1 number_2 ...))
+   ,(+ (term number_0) (term (sum (number_1 number_2 ...))))]
+  [(sum ())
+   0])
 
 ;env can't be empty if this is called
 (define-metafunction ruby-core
