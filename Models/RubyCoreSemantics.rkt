@@ -76,7 +76,7 @@
         (where kont_new (gen-kont (+ number ... ce e ...) env kont)))
    (--> ((+ number_0 number_1 number_2 ...) env sto kont)
         (number_ans env sto kont)
-        (where number_ans (term (sum (number_0 number_1 number_2 ...)))))
+        (where number_ans (sum (+ number_0 number_1 number_2 ...))))
          
          
    
@@ -312,9 +312,9 @@
 (define-metafunction ruby-core
   sum : ce -> number
   [(sum (+ number_0 number_1 number_2 ...))
-   ,(+ (term number_0) (term (sum (number_1 number_2 ...))))]
-  [(sum ())
-   0])
+   ,(+ (term number_0) (term (sum (+ number_1 number_2 ...))))]
+  [(sum (+ number_0))
+   number_0])
 
 ;env can't be empty if this is called
 (define-metafunction ruby-core
@@ -349,6 +349,7 @@
   update-helper : x ae sto -> sto
 [(update-helper x ae ((x_1 ae_1) ...))
  ((x ae) (x_1 ae_1) ...)])
+
 
 (define-metafunction ruby-core
   bound? : x env -> boolean
@@ -503,6 +504,12 @@
 (check-expect (tc (term ((app (proc () 4) (5)) () () halt))
                   (term 4))
                   #t)
+
+;plus
+(test--> rc-red (term ((+ 5 4) () () halt))
+         (term (9 () () halt)))
+(test-->> rc-red (term ((+ (+ 5 4) (+ 5 3)) () () halt))
+         (term (17 () () halt)))
 
 
 
