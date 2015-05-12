@@ -46,9 +46,7 @@
   ;configuration definitions
   (sto ((x ae) ...))
   (env x)
-  (kont (k-do E env kont) ;keep environment if do
-        (k-ret kont) ;originating from a block call
-        (k E env kont) ;normal control point 
+  (kont (k E env kont) ;normal control point 
         halt) ;base case
   (CF (e env sto kont))
   (x variable-not-otherwise-mentioned blk cc))  
@@ -64,12 +62,6 @@
    (--> (ae env sto (k E env_k kont))
         ((in-hole E ae) env_k sto kont)
         cont)
-   (--> (ae env sto (k-do E env_k kont))
-        ((in-hole E ae) env_k sto kont)
-        cont-do)
-   (--> (ae env sto (k-ret kont)) ;; if ret wasn't called, ignore
-        (ae env sto kont)
-        cont-ret)
    
    ;plus
    (--> ((+ number ... ce e ...) env sto kont)
@@ -113,8 +105,6 @@
    ;; handle case where bind exp needs to be evaluated
    (--> ((let x ce) env sto kont)
         (ce env sto kont_new)
-        ;(where env_new ,(gensym)) ;; commented out because let's in a do statement should add to do's env
-        ;(where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (let x e) env kont))
         let-expr)
    ;; handle new binding case
@@ -288,7 +278,7 @@
    (k (app ae_f (ae ... hole e ...)) env kont)]
   ;do
   [(gen-kont (do ce e_1 ...) env kont)
-   (k-do (do hole e_1 ...) env kont)] ;remove first expression
+   (k (do hole e_1 ...) env kont)] ;remove first expression
   ;if
   [(gen-kont (if ce e_t e_f) env kont)
    (k (if hole e_t e_f) env kont)]
