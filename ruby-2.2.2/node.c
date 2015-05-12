@@ -1076,7 +1076,13 @@ static char
 		goto scope;	
 	}	
 	out = SCATF(STR("(app-b "), ID2STR(node->nd_iter->nd_mid));
-	out = SCATF(out, PAD(RTC(node->nd_iter->nd_args)));
+	if(!node->nd_iter->nd_args) {
+	  out = SCATF(out, STR(" () "));
+	}
+	else {
+	  out = SCATF(out, PAD(RTC(node->nd_iter->nd_args)));
+	}
+
 	out = SCATF(out, STR("(proc ("));
 	out = CLOSP(SCATF(out, handle_args(node->nd_body)));
 	return  CLOSP(out);
@@ -1125,8 +1131,11 @@ static char
 	/*yield invocation
 	 * yield [nd_head]
 	F_NODE(nd_head, "arguments");*/
-	return CLOSP(SCATF(STR("(yield "), RTC(node->nd_head)));
-
+	if(!node->nd_head) {
+		return STR("(yield ())");
+	} else {
+		return CLOSP(SCATF(STR("(yield "), RTC(node->nd_head)));
+	}
       case NODE_LVAR:
   	/*local variable reference
 	 * 	 * [nd_vid](lvar)
@@ -1217,7 +1226,7 @@ static char
 	 * 			ANN("example: true");
 	 * 				
 	break;*/
-	return STR("true");
+	return STR("#t");
 
       case NODE_FALSE:
 	/*
@@ -1226,7 +1235,7 @@ static char
 	 * 			ANN("example: false");
 	 * 				
 	break;*/
-	return STR("false");
+	return STR("#f");
 
       case NODE_LAMBDA:
 	/*

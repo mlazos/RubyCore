@@ -34,7 +34,7 @@
       (app ae (e ... hole e ...))
       ;apply with block
       (app-b hole (e ...) e)
-      (app-b ae (e ... hole ...) e)
+      (app-b ae (e ... hole e ...) e)
       (app-b ae (ae ...) hole)
       (yield (e ... hole e ...))
       (ret hole)
@@ -64,7 +64,7 @@
         ((in-hole E ae) env_k sto kont)
         cont)
    (--> (ae env sto (k-do E env_k kont))
-        ((in-hole E ae) env sto kont)
+        ((in-hole E ae) env_k sto kont)
         cont-do)
    (--> (ae env sto (k-ret kont)) ;; if ret wasn't called, ignore
         (ae env sto kont)
@@ -111,9 +111,9 @@
    ;let            
    ;; handle case where bind exp needs to be evaluated
    (--> ((let x ce) env sto kont)
-        (ce env_new sto_new kont_new)
-        (where env_new ,(gensym))
-        (where sto_new (copy-env env env_new sto))
+        (ce env sto kont_new)
+        ;(where env_new ,(gensym))
+        ;(where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (let x e) env kont))
         let-expr)
    ;; handle new binding case
@@ -277,8 +277,8 @@
         (where kont_new (gen-kont (yield (ae ... ce e ...)) env kont))
         yield-exprs)
    ;apply block to evaulated arguments
-   (--> ((yield (ae_1 ae_2 ...)) env sto kont)
-        ((app blk (ae_1 ae_2 ...)) env sto kont))))
+   (--> ((yield (ae_1 ...)) env sto kont)
+        ((app blk (ae_1 ...)) env sto kont))))
 
 ;;------------------ metafunctions -----------------
 (define-metafunction ruby-core
@@ -323,7 +323,7 @@
   [(sto-lookup x_s ((x_1 ae_1) (x_2 ae_2) ...))
    ,(if (equal? (term x_s) (term x_1))
         (term ae_1)
-        (term (sto-lookup x_s ((x_2 ae_2) ...))))]
+        (term (sto-lookup x_s ((x_2 ae_2) ...))))])
 
 (test-equal (term (sto-lookup x123 ((x123 5))))
             (term 5))
@@ -605,6 +605,7 @@
 (test-equal (re (term ((do (let t 5) t) env1 ((env1 ((t g123))) (g123 3)) halt)))
          5)
 (test-equal (re (term ((do (let t 5) (let t 6)) env1 ((env1 ((t g123))) (g123 0)) halt)))
+            6)
 
 ;app
 (test-equal (re (term ((app (lam (x) x) (5)) env1 ((env1 ())) halt)))
@@ -664,6 +665,10 @@
                         env1 ((env1 ()))
                         halt)))
                   (term 4))
+(test-equal (re (term ((do (let func1 (lam (x) (app func2 (x))))
+                         (let func2 (lam (x) (+ x 1)))
+                         (app func1 (5))) env1 ((env1 ())) halt)))
+            (term 6))
 
 ;splat arguments
 (test-equal (re (term ((app (proc (x y) x) ((5 4))) env1 ((env1 ())) halt)))
@@ -696,6 +701,32 @@
 (test-equal (re (term ((+ (+ 5 4) (+ 5 3)) env1 ((env1 ())) halt)))
          (term 17))
 
+
+;; Ruby Sample programs
+;yield_twice.rb
+(test-equal (re (term ((app (lam () (do (let y 2) (let two_times (lam () (do (let x 5) (yield ()) (yield ())))) (app-b two_times () (proc () (let y (+ y 1)))) y)) ()) env1 ((env1 ())) halt)))
+            (term 4))
+;single_block.rb
+(test-equal (re (term ((app (lam () (do (let func1 (lam (a c) (app-b func2 (a) (proc () (ret c))))) (let func2 (lam (a) (do (yield (a)) (let a 1)))) (app func1 (1 2)))) ()) env1 ((env1 ())) halt)))
+            (term 2))
+;splat.rb
+(test-equal (re (term ((app (lam () (do (let x (proc (a b) (+ a b))) (app x ((1 2))))) ()) env1 ((env1 ())) halt)))
+            (term 3))
+;two_level_yield.rb
+(test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) a)))) (let func2 (lam (a b) (app-b func3 (a) (proc () (yield (b)))))) (let func3 (lam (a) (yield ()))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
+                      (term 2))
+;too_many_args.rb
+(test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) a)))) (let func2 (lam (a b) (app-b func3 (a) (proc (a) (yield ((+ b a))))))) (let func3 (lam (a) (yield (a 2 3)))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
+            (term 3))
+;multi_block.rb
+(test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) (ret a))))) (let func2 (lam (a b) (do (app-b func3 (a) (proc (a) (ret (+ (yield ((+ b a))) 2)))) b))) (let func3 (lam (a) (yield (a 2 3)))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
+            (term 3))
+;if.rb
+(test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) (ret a))))) (let func2 (lam (a b) (do (app-b func3 (#t) (proc (a) (if a (ret (+ (yield ((+ b 1))) 2)) b))) (+ b 2)))) (let func3 (lam (a) (yield (a 2 3)))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
+            (term 3))
+                       
+                
+                     
 
 (test-results)
 (test)
