@@ -44,7 +44,7 @@
      ae) 
   ;configuration definitions
   (sto ((x ae) ...))
-  (env ((x x) ...))
+  (env x)
   (kont (k-do E env kont) ;keep environment if do
         (k-ret kont) ;originating from a block call
         (k E env kont) ;normal control point 
@@ -72,7 +72,9 @@
    
    ;plus
    (--> ((+ number ... ce e ...) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (+ number ... ce e ...) env kont)))
    (--> ((+ number_0 number_1 number_2 ...) env sto kont)
         (number_ans env sto kont)
@@ -88,7 +90,7 @@
    ;id lookup
    (--> (x env sto kont)
         (ae_ans env sto kont)
-        (side-condition (term (bound? x env)))
+        (side-condition (term (bound? x env sto)))
         (where ae_ans (lookup x env sto))
         id-lookup)
    
@@ -100,52 +102,59 @@
         (e_f env sto kont)
         if-f)
    (--> ((if ce e_t e_f) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto)) 
         (where kont_new (gen-kont (if ce e_t e_f) env kont))
         if-expr)   
    
    ;let            
    ;; handle case where bind exp needs to be evaluated
    (--> ((let x ce) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (let x e) env kont))
         let-expr)
    ;; handle new binding case
-   (--> ((let x ae) ((x_1 x_2) ...) ((x_3 ae_1) ...) kont)
-        (ae ((x x_new) (x_1 x_2) ...) ((x_new ae) (x_3 ae_1) ...) kont)
-        (side-condition (not (term (bound? x ((x_1 x_2) ...)))))
+   (--> ((let x ae) env sto kont)
+        (ae env sto_new kont)
+        (side-condition (not (term (bound? x env sto))))
         (where x_new ,(gensym))
+        (where sto_newenv (add-to-env x x_new env sto))
+        (where sto_new (add-to-sto x_new ae sto_newenv))
         let-bind)
    ;; handle update binding case
    (--> ((let x ae) env sto kont)
         (ae env sto_new kont)
-        (side-condition (term (bound? x env)))
+        (side-condition (term (bound? x env sto)))
         (where sto_new (update-sto x ae env sto))
         let-update)
    
    ;application --------
    ;unevaluated function position
    (--> ((app ce (e ...)) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (app ce (e ...)) env kont))
         app-func-expr)
    ;unevaluated args
    (--> ((app ae_f (ae_a ... ce e ...)) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (app ae_f (ae_a ... ce e ...)) env kont))
         app-arg-expr)
    ;unbound arguments
-   (--> ((app (clo (lam (x_1 x_2 ...) e_body) ((x_id x_loc1) ...)) 
-              (ae_1 ae_2 ...)) 
-         env
-         ((x_loc2 ae_v) ...) kont)
-        ((app (clo (lam (x_2 ...) e_body) 
-                   ((x_1 x_new) (x_id x_loc1) ...)) 
-              (ae_2 ...)) 
-         env
-         ((x_new ae_1) (x_loc2 ae_v) ...) kont)
+   (--> ((app (clo (lam (x_1 x_2 ...) e_body) env_c) (ae_1 ae_2 ...)) 
+         env sto kont)
+        ((app (clo (lam (x_2 ...) e_body) env_c) (ae_2 ...)) 
+         env sto_new kont)
         (side-condition (= (length (term (x_1 x_2 ...))) (length (term (ae_1 ae_2 ...)))))
         (where x_new ,(gensym))
+        (where sto_newenv (add-to-env x_1 x_new env_c sto))
+        (where sto_new (add-to-sto x_new ae_1 sto_newenv))
         app-lam)
    ;all bound arguments
    (--> ((app (clo (lam () e_body) env_c) ()) env sto kont)
@@ -154,19 +163,16 @@
    
    
    ;procedure application unbound arguments
-   (--> ((app (clo (proc (x_1 x_2 ...) e_body) ((x_id x_loc1) ...)) 
-              (ae_1 ae_2 ...)) 
-         env
-         ((x_loc2 ae_v) ...) kont)
-        ((app (clo (proc (x_2 ...) e_body) 
-                   ((x_1 x_new) (x_id x_loc1) ...)) 
-              (ae_2 ...)) 
-         env
-         ((x_new ae_1) (x_loc2 ae_v) ...) kont)
+   (--> ((app (clo (proc (x_1 x_2 ...) e_body) env_c) (ae_1 ae_2 ...)) 
+         env sto kont)
+        ((app (clo (proc (x_2 ...) e_body) env_c) (ae_2 ...)) 
+         env sto_new kont)
         (side-condition (not (and (= (length (term (ae_1 ae_2 ...))) 1)
                                   (> (length (term (x_1 x_2 ...))) 1)
                                   (term (list? ae_1))))) ;condition for splatting
         (where x_new ,(gensym))
+        (where sto_newenv (add-to-env x_1 x_new env_c sto))
+        (where sto_new (add-to-sto x_new ae_1 sto_newenv))
         app-proc)
    
    ;all bound arguments
@@ -175,18 +181,20 @@
         app-proc-no-args)
    
    ;not enough args provided, bind to nil
-   (--> ((app (clo (proc (x_1 x_2 ...) e_body) ((x_id x_loc) ...)) ())
-              env ((x_locs ae_1) ...) kont)
-        ((app (clo (proc (x_2 ...) e_body) ((x_1 x_new) (x_id x_loc) ...)) ())
-              env ((x_new nil) (x_locs ae_1) ...) kont)
-        (where x_new ,(gensym)))
+   (--> ((app (clo (proc (x_1 x_2 ...) e_body) env_c) ())
+              env sto kont)
+        ((app (clo (proc (x_2 ...) e_body) env_c) ())
+              env sto_new kont)
+        (where x_new ,(gensym))
+        (where sto_newenv (add-to-env x_1 x_new env_c sto))
+        (where sto_new (add-to-sto x_new nil sto_newenv)))
         
          
    
    ;splat arguments
-   (--> ((app (clo (proc (x_1 x_2 x_3 ...) e_body) env) ((e_1 ...)))
+   (--> ((app (clo (proc (x_1 x_2 ...) e_body) env_c) ((e_1 e_2 ...)))
          env sto kont)
-        ((app (clo (proc (x_1 x_2 x_3 ...) e_body) env) (e_1 ...))
+        ((app (clo (proc (x_1 x_2 ...) e_body) env_c) (e_1 e_2 ...))
          env sto kont)
         app-proc-splat)
    
@@ -195,46 +203,45 @@
    ;apply with block
    ;unevaluated function position
    (--> ((app-b ce (e_1 ...) e_2) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (app-b ce (e_1 ...) e_2) env kont))
         app-b-func-expr)
    ;unevaluated args + block
    (--> ((app-b ae_f (ae_a ... ce e_1 ...) e_2) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (app-b ae_f (ae_a ... ce e_1 ...) e_2) env kont))
         app-b-arg-expr)
    ;unevaluated block
    (--> ((app-b ae_f (ae_a ...) ce) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (app-b ae_f (ae_a ...) ce) env kont))
         app-b-b-expr)
    
    ;unbound arguments with block
-   (--> ((app-b (clo (lam (x_1 x_2 ...) e_body) ((x_id x_loc1) ...)) 
-              (ae_1 ae_2 ...)
-              ae) 
-         env
-         ((x_loc2 ae_v) ...) kont)
-        ((app-b (clo (lam (x_2 ...) e_body) 
-                   ((x_1 x_new) (x_id x_loc1) ...)) 
-              (ae_2 ...)
-              ae) 
-         env
-         ((x_new ae_1) (x_loc2 ae_v) ...) kont)
+   (--> ((app-b (clo (lam (x_1 x_2 ...) e_body) env_c) (ae_1 ae_2 ...) ae) 
+         env sto kont)
+        ((app-b (clo (lam (x_2 ...) e_body) env_c) (ae_2 ...) ae) 
+         env sto_new kont)
         (side-condition (= (length (term (x_1 x_2 ...))) (length (term (ae_1 ae_2 ...)))))
         (where x_new ,(gensym))
+        (where sto_newenv (add-to-env x_1 x_new env_c sto))
+        (where sto_new (add-to-sto x_new ae_1 sto_newenv))
         app-b-lam)
    
    ;all bound arguments with block
-   (--> ((app-b (clo (lam () e_body) ((x_id x_loc) ...)) () ae)
-         env ((x_loc2 ae_v) ...) kont)
-        (e_body ((blk x_new) (x_id x_loc) ...)
-                ((x_new ae) (x_loc2 ae_v) ...) 
-                (k-ret kont))
+   (--> ((app-b (clo (lam () e_body) env_c) () ae)
+         env sto kont)
+        (e_body env_c sto_new (k-ret kont))
         (where x_new ,(gensym))
+        (where sto_newenv (add-to-env blk x_new env_c sto))
+        (where sto_new (add-to-sto x_new ae sto_newenv))
         app-b-lam-no-args)
-   
-   
                                    
    ;do
    (--> ((do ce e_1 ...) env sto kont)
@@ -257,19 +264,21 @@
         ((ret ae) env sto kont))
    ;eval return value
    (--> ((ret ce) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (ret ce) env kont)))
-   
    ;yield
    ;evaluate arguments to yield
    (--> ((yield (ae ... ce e ...)) env sto kont)
-        (ce env sto kont_new)
+        (ce env_new sto_new kont_new)
+        (where env_new ,(gensym))
+        (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (yield (ae ... ce e ...)) env kont))
         yield-exprs)
    ;apply block to evaulated arguments
-   (--> ((yield (ae ...)) env sto kont)
-        ((app blk (ae ...)) env sto kont))
-   ))
+   (--> ((yield (ae_1 ae_2 ...)) env sto kont)
+        ((app blk (ae_1 ae_2 ...)) env sto kont))))
 
 ;;------------------ metafunctions -----------------
 (define-metafunction ruby-core
@@ -308,57 +317,211 @@
   [(gen-kont (+ number ... ce e ...) env kont)
    (k (+ number ... hole e ...) env kont)])
   
-;summing metafunction
-(define-metafunction ruby-core
-  sum : ce -> number
-  [(sum (+ number_0 number_1 number_2 ...))
-   ,(+ (term number_0) (term (sum (+ number_1 number_2 ...))))]
-  [(sum (+ number_0))
-   number_0])
 
-;env can't be empty if this is called
-(define-metafunction ruby-core
-  env-lookup : x env -> x
-  [(env-lookup x_s ((x_1 x_2) (x_3 x_4) ...))
-   ,(if (equal? (term x_s) (term x_1))
-        (term x_2)
-        (term (env-lookup x_s ((x_3 x_4) ...))))])
-
-;sto can't be empty due to side-cond
+;lookup in store
 (define-metafunction ruby-core
   sto-lookup : x sto -> ae
   [(sto-lookup x_s ((x_1 ae_1) (x_2 ae_2) ...))
    ,(if (equal? (term x_s) (term x_1))
         (term ae_1)
-        (term (sto-lookup x_s ((x_2 ae_2) ...))))])
+        (term (sto-lookup x_s ((x_2 ae_2) ...))))]
+  [(sto-lookup x_s ())
+   ((HERE x_s))])
 
-;env can't be empty due to side-cond
-(define-metafunction ruby-core
-  lookup : x env sto -> ae
-  [(lookup x_s env sto )
-   (sto-lookup (env-lookup x_s env) sto)])
+(test-equal (term (sto-lookup x123 ((x123 5))))
+            (term 5))
+(test-equal (term (sto-lookup g123 ((x123 5) (g123 4))))
+            (term 4))
+(test-equal (term (sto-lookup g123 ((x123 5) (g123 4) (g446 7))))
+            (term 4))
 
-;store can't be empty due to side-cond
+;adds a given ae bound to x to the store
 (define-metafunction ruby-core
-  update-sto : x ae env sto -> sto
-  [(update-sto x ae env sto)
-   (update-helper (env-lookup x env) ae sto)])
-
-;store can't be empty if this is called due to a side-cond
-(define-metafunction ruby-core
-  update-helper : x ae sto -> sto
-[(update-helper x ae ((x_1 ae_1) ...))
+  add-to-sto : x ae sto -> sto
+[(add-to-sto x ae ((x_1 ae_1) ...))
  ((x ae) (x_1 ae_1) ...)])
 
 
+;updates the value of x in the store
+;looks up x's loc in the env, then 
+;overwrites the original by adding the old loc with the new ae
+;to the store
 (define-metafunction ruby-core
-  bound? : x env -> boolean
-  [(bound? x_f ((x_f x_fa) (x_2 x_2a) ...))
+  update-sto : x ae env sto -> sto
+  [(update-sto x ae env sto)
+   (add-to-sto (env-lookup x env sto) ae sto)])
+
+
+;looks up x in the given env
+(define-metafunction ruby-core
+  env-lookup-helper : x ae -> x
+  [(env-lookup-helper x_s ((x_1 x_2) (x_3 x_4) ...))
+   ,(if (equal? (term x_s) (term x_1))
+        (term x_2)
+        (term (env-lookup-helper x_s ((x_3 x_4) ...))))])
+
+(test-equal (term (env-lookup-helper x123 ((x123 g123))))
+            (term g123))
+(test-equal (term (env-lookup-helper x123 ((id456 loc123) 
+                                           (id567 loc123) 
+                                           (x123 loc1) 
+                                           (x12 loc2))))
+            (term loc1))
+
+
+;retrieves the env and then
+;looks up x in the env
+(define-metafunction ruby-core
+  env-lookup : x env sto -> x
+  [(env-lookup x env sto)
+   (env-lookup-helper x (sto-lookup env sto))])
+
+(test-equal (term (env-lookup x123 env1 ((env1 ((x123 g123))))))
+            (term g123))
+(test-equal (term (env-lookup x123 env1 ((env2 ()) 
+                                         (env1 ((loc456 x1) 
+                                                (x123 g123)
+                                                (loc786 x2))))))
+            (term g123))
+(test-equal (term (env-lookup x123 env1 ((env2 ((loc123 x1)
+                                                (loc456 x2))) 
+                                         (env1 ((loc456 x1) 
+                                                (x123 g123)
+                                                (loc786 x2)))
+                                         (env3 ((loc789 x2)
+                                                (loc578 x4))))))
+            (term g123))
+
+
+;copy env
+;copies env into location x in the store, 
+;returns the updated store
+(define-metafunction ruby-core
+  copy-env : env x sto -> sto
+  [(copy-env env_old x_new ((x_1 ae_1) ...))
+   ((x_new (sto-lookup env_old ((x_1 ae_1) ...))) (x_1 ae_1) ...)])
+
+(test-equal (term (copy-env oldenv newenv ((x123 5) (y456 6) (oldenv ((x123 x456))))))
+            (term ((newenv ((x123 x456))) (x123 5) (y456 6) (oldenv ((x123 x456))))))
+(test-equal (term (copy-env oldenv newenv ((x123 5) (y456 6) (oldenv ()))))
+            (term ((newenv ()) (x123 5) (y456 6) (oldenv ()))))
+
+;should take new id, new loc, and add it to the list of lists
+;that represents an environment
+(define-metafunction ruby-core
+  add-to-env-list : x x ae -> ae
+  [(add-to-env-list x_idnew x_locnew ((x_id x_loc) ...))
+   ((x_idnew x_locnew) (x_id x_loc) ...)])
+
+(test-equal (term (add-to-env-list x123 x123 ()))
+            (term ((x123 x123))))
+(test-equal (term (add-to-env-list x123 x123 ((x123 x123))))
+            (term ((x123 x123) (x123 x123))))
+(test-equal (term (add-to-env-list x456 x123 ((x789 x876))))
+            (term ((x456 x123) (x789 x876))))
+
+
+;add-to-env 
+;retrieves environment from store, adds id and location
+;adds updated environment to store
+(define-metafunction ruby-core
+  add-to-env : x x env sto -> sto
+  [(add-to-env x_newid x_newloc env sto)
+   (add-to-sto env (add-to-env-list x_newid x_newloc (sto-lookup env sto)) sto)])
+
+
+(test-equal (term (add-to-env xid xloc en1 ((en1 ()))))
+            (term ((en1 ((xid xloc))) (en1 ()))))
+(test-equal (term (add-to-env xid xloc en1 ((en1 ((xold xold2))))))
+            (term ((en1 ((xid xloc) (xold xold2))) (en1 ((xold xold2))))))
+
+;retrieves the current environment
+;searches that environment for x to get loc
+;searches the store for the loc of x
+(define-metafunction ruby-core
+  lookup : x env sto -> ae
+  [(lookup x_s env sto)
+   (sto-lookup (env-lookup x_s env sto) sto)])
+
+(test-equal (term (lookup id env1 ((loc123 1)
+                                   (loc456 2)
+                                   (env2 ((x2 loc123)
+                                          (x3 loc456)))
+                                   (env1 ((x456 loc1)
+                                          (id loc)
+                                          (y45 loc2)))
+                                   (loc (123))
+                                   (loc789 "hi")
+                                   )))
+            (term (123)))
+(test-equal (term (lookup id env2 ((loc123 1)
+                                   (loc458 2)
+                                   (env2 ((x2 loc123)
+                                          (id loc456)))
+                                   (env1 ((x456 loc1)
+                                          (id loc)
+                                          (y45 loc2)))
+                                   (loc (123))
+                                   (loc456 "hey")
+                                   (loc789 "hi")
+                                   )))
+            (term "hey"))
+
+
+
+
+
+;searches the retrieved environment list
+(define-metafunction ruby-core
+  bound-helper : x ae -> boolean
+  [(bound-helper x_f ((x_f x_fa) (x_2 x_2a) ...))
    #t]
-  [(bound? x_f ((x_2 x_2a) (x_3 x_3a) ...))
-   (bound? x_f ((x_3 x_3a) ...))]
-  [(bound? x_f ())
+  [(bound-helper x_f ((x_2 x_2a) (x_3 x_3a) ...))
+   (bound-helper x_f ((x_3 x_3a) ...))]
+  [(bound-helper x_f ())
    #f])
+
+(define-metafunction ruby-core
+  bound? : x env sto -> boolean
+  [(bound? x env sto)
+   (bound-helper x (sto-lookup env sto))])
+
+(test-equal (term (bound? id env1 ((loc123 1)
+                                   (loc458 2)
+                                   (env2 ((x2 loc123)
+                                          (id loc456)))
+                                   (env1 ((x456 loc1)
+                                          (id loc)
+                                          (y45 loc2)))
+                                   (loc (123))
+                                   (loc456 "hey")
+                                   (loc789 "hi"))))
+            (term #t))
+(test-equal (term (bound? id1 env1 ((loc123 1)
+                                   (loc458 2)
+                                   (env2 ((x2 loc123)
+                                          (id loc456)))
+                                   (env1 ((x456 loc1)
+                                          (id loc)
+                                          (y45 loc2)))
+                                   (loc (123))
+                                   (loc456 "hey")
+                                   (loc789 "hi"))))
+            (term #f))
+(test-equal (term (bound? id1 env2 ((loc123 1)
+                                   (loc458 2)
+                                   (env2 ((x2 loc123)
+                                          (id loc456)))
+                                   (env1 ((x456 loc1)
+                                          (id loc)
+                                          (y45 loc2)))
+                                   (loc (123))
+                                   (loc456 "hey")
+                                   (loc789 "hi"))))
+            (term #f))
+
+                                   
+
 
 ;list predicate
 (define-metafunction ruby-core
@@ -373,144 +536,169 @@
   OF : CF -> ae
   [(OF (ae env sto kont)) ae])
 
+;summing metafunction
+(define-metafunction ruby-core
+  sum : ce -> number
+  [(sum (+ number_0 number_1 number_2 ...))
+   ,(+ (term number_0) (term (sum (+ number_1 number_2 ...))))]
+  [(sum (+ number_0))
+   number_0])
+
 
 
 ;;testing functions
 
-;short-hand to run rr
+;short-hand to run rr once
 (define (rr x) (apply-reduction-relation rc-red x))
-;;short-hand to test rr
-(define (tc x y) (let ([final-configs (apply-reduction-relation* rc-red x)])
-  (and (= (length final-configs) 1) 
-          (equal? (term (OF ,(first final-configs))) y))))
+;;short-hand to extract answer
+(define (re x) 
+  (let ([final-configs (apply-reduction-relation* rc-red x)])
+    (if (= (length final-configs) 1)
+        (term (OF ,(first final-configs)))
+        (raise "multiple transitions"))))
 
 ;;test cases
 ;atomic expressions
-(test--> rc-red (term (5 () () (k (do hole 5) () halt)))
-         (term ((do 5 5) () () halt)))
-(test--> rc-red (term ("fg" () () (k (do hole 5) () halt)))
-         (term ((do "fg" 5) () () halt)))
-(test--> rc-red (term ("fg" () () (k (if hole 4 5) () halt)))
-         (term ((if "fg" 4 5) () () halt)))
-(test--> rc-red (term ((lam (x) x) ((t g123)) () halt))
-         (term ((clo (lam (x) x) ((t g123))) ((t g123)) () halt)))
+(test-equal (re (term (5 env1 () (k (do hole 5) env2 halt))))
+         5)
+(test-equal (re (term ("fg" env1 () (k (do hole 5) env2 halt))))
+         5)
+(test-equal (re (term (#t env1 () (k (if hole 4 5) env2 halt))))
+         4)
 
 
 ;if 
-(test--> rc-red (term ((if #t 3 5) () () halt)) (term (3 () () halt)))
-(test--> rc-red (term ((if #f 4 5) () () halt)) (term (5 () () halt)))
-(test--> rc-red (term ((if (if #t #f #t) 4 5) () () halt))
-          (term ((if #t #f #t) () () (k (if hole 4 5) () halt))))
+(test-equal (re (term ((if #t 3 5) env1 () halt))) 
+            3)
+(test-equal (re (term ((if #f 4 5) env1 ((env1 ())) halt))) 
+            5)
+(test-equal (re (term ((if (if #t #f #t) 4 5) env1 ((env1 ())) halt)))
+            5)
 
 ;id lookup
-(test--> rc-red (term (t ((t g123)) ((g123 #t)) halt))
-          (term (#t ((t g123)) ((g123 #t)) halt)))
-(test--> rc-red (term (t ((x g124) (t g123)) ((g123 #t) (g124 0)) halt))
-         (term (#t ((x g124) (t g123)) ((g123 #t) (g124 0)) halt)))
+(test-equal (re (term (t env1 ((g123 #t) (env1 ((t g123)))) halt)))
+            #t)
+(test-equal (re (term (t env1 ((g123 #t) 
+                               (g124 0) 
+                               (env1 ((x g124) (t g123)))) 
+                         halt)))
+            #t)
 
 
 ;new binding
-(check-expect (tc (term ((do (let x 5) x) () () halt)) (term 5))
-              true)
-
+(test-equal (re (term ((do (let x 5) x) env1 ((env1 ())) halt)))
+            (term 5))
+(test-equal (re (term ((do (let x 6) (let x (+ x 1)) x) 
+                       env1 
+                       ((env1 ())) 
+                       halt)))
+            (term 7))
+(test-equal (re (term ((do (if #t (let x 5) 4) x) env1 ((env1 ()))
+                                                  halt)))
+                (term 5))
+(test-equal (re (term ((do (if #t (if #t (let x 5) 3) 4) x) env1 ((env1 ()))
+                                                  halt)))
+                (term 5))
+(test-equal (re (term ((do (let x 5) x) env1 ((env1 ())) halt)))
+                      (term 5))
+            
+      
 
 ;update binding
-(test--> rc-red (term ((let t 5) ((t g123)) ((g123 3)) halt))
-         (term (5 ((t g123)) ((g123 5) (g123 3)) halt)))
-(test-->> rc-red (term ((do (let t 5) (let t 6)) ((t g123)) ((g123 0)) halt))
-          (term (6 ((t g123)) ((g123 6) (g123 5) (g123 0)) halt)))
+(test-equal (re (term ((do (let t 5) t) env1 ((env1 ((t g123))) (g123 3)) halt)))
+         5)
+(test-equal (re (term ((do (let t 5) (let t 6)) env1 ((env1 ((t g123))) (g123 0)) halt)))
+         6)
 
 ;app
-(check-expect (tc (term ((app (lam (x) x) (5)) () () halt)) (term 5))
-              #t)
-(check-expect (tc (term ((do (let y 5) (let x (lam (y) y))
-                           (do (app x (7)))) () () halt))
-                  (term 7))
-              #t)
-
-(test-->> rc-red (term ((app (lam () 5) ()) () () halt))
-         (term (5 () () halt)))
-
-(check-expect (tc (term ((app (lam (x y) y) (4 5)) () () halt))
+(test-equal (re (term ((app (lam (x) x) (5)) env1 ((env1 ())) halt)))
     (term 5))
-              #t)
+
+(test-equal (re (term ((do (let y 5) (let x (lam (y) y))
+                           (do (app x (7)))) env1 ((env1 ())) halt)))
+                  (term 7))
+
+(test-equal (re (term ((app (lam () 5) ()) env1 ((env1 ())) halt)))
+         (term 5))
+
+(test-equal (re (term ((app (lam (x y) y) (4 5)) env1 ((env1 ())) halt)))
+    (term 5))
+
 
 ;app with block and yield
-(check-expect (tc 
-               (term ((app-b 
+(test-equal (re (term ((app-b (lam (x) x) (5) (lam (x) x)) env1 ((env1 ())) halt)))
+                (term 5))
+(test-equal (re (term ((app-b 
                        (lam (x) (do (let x 5) (yield (5)) (let x 6)))
                        (4)
-                       (lam (x) (ret x))) () () halt))
+                       (lam (x) (ret x))) env1 ((env1 ())) halt)))
                (term 5))
-              #t)
-(check-expect (tc 
-               (term ((app-b 
+(test-equal (re (term ((app-b 
                        (lam (x) (do (let x 5) (yield (x)) (let x 6)))
                        (4)
-                       (lam (x) (ret x))) () () halt))
+                       (lam (x) (ret x))) env1 ((env1 ())) halt)))
                (term 5))
-              #t)
-(check-expect (tc (term ((app (lam (x) 
+(test-equal (re (term ((app (lam (x) 
                                    (app-b (lam (x) (yield (x))) (x) (proc (x) x)))
-                              (0)) () () halt))
-                  (term 0))
-              #t)
-(check-expect (tc (term ((app-b (lam (x) (do (let x 5) (yield (x)))) (3) (proc (x) x)) () () halt))
-                  (term 5))
-                  #t)
-(check-expect (tc (term ((do (let x (lam (x) (do (let x 8) (let x 7) (yield (x)))))
-                           (app-b x (0) (proc (x) (ret x)))) () () halt))
+                              (0)) env1 ((env1 ())) halt)))
+                  (term 0))             
+(test-equal (re (term 
+                 ((app-b (lam (x) (do (let x 5) (yield (x)))) 
+                         (3) 
+                         (proc (x) x)) env1 ((env1 ())) halt)))
+                  (term 5))                 
+(test-equal (re (term ((do (let x (lam (x) (do (let x 8) (let x 7) (yield (x)))))
+                           (app-b x (0) (proc (x) (ret x)))) env1 ((env1 ())) halt)))
                   (term 7))
-              #t)
-
               
-                                                        
+
+           
+                                                 
 ;do
-(test--> rc-red (term ((do 5) () () halt)) (term (5 () () halt)))
-(test--> rc-red (term ((do 5 (if #t 3 4)) () () halt))
-         (term ((do (if #t 3 4)) () () halt)))
-(test-->> rc-red (term ((do (if #t 3 4) 5) () () halt))
-         (term (5 () () halt)))
-(test--> rc-red (term ((do 5 5) () () halt))
-         (term ((do 5) () () halt)))
-(check-expect (tc (term ((app (do (let x 5) (let y 8) (let x 7)
+(test-equal (re (term ((do 5) env1 ((env1 ())) halt)))
+            (term 5))
+(test-equal (re (term ((do 5 (if #t 3 4)) env1 ((env1 ())) halt)))
+            (term 3))
+(test-equal (re (term ((do (if #t 3 4) 5) env1 ((env1 ())) halt)))
+            (term 5))
+(test-equal (re (term ((do 5 5) env1 ((env1 ())) halt)))
+                (term 5))
+(test-equal (re (term ((app (do (let x 5) (let y 8) (let x 7)
                           (let y 4) (let x 5) (lam (x) y)) (4))
-                        ()
-                        ()
-                        halt))
+                        env1 ((env1 ()))
+                        halt)))
                   (term 4))
-              #t)
 
 ;splat arguments
-(check-expect (tc (term ((app (proc (x y) x) ((5 4))) () () halt))
+(test-equal (re (term ((app (proc (x y) x) ((5 4))) env1 ((env1 ())) halt)))
          (term 5))
-              #t)
-(test--> rc-red (term ((app (clo (proc (x y) x) ()) ((5 4 3))) () () halt))
-                 (term ((app (clo (proc (x y) x) ()) (5 4 3)) () () halt)))
-(test--> rc-red (term ((app (clo (proc () 5) ()) ((5 4 3))) () () halt))
-                 (term (5 () () halt)))
-(test--> rc-red (term ((app (clo (proc (x y) x) ()) ((5 4))) () () halt))
-                 (term ((app (clo (proc (x y) x) ()) (5 4)) () () halt)))
-(test--> rc-red (term ((app (clo (proc (x y) x) ()) ((5))) () () halt))
-                 (term ((app (clo (proc (x y) x) ()) (5)) () () halt)))
+              
+(test-equal (re  (term ((app (clo (proc (x y) x) env1) ((5 4 3))) env1 ((env1 ())) halt)))
+            (term 5))
+                 
+(test-equal (re (term ((app (clo (proc () 5) env1) ((5 4 3))) env1 ((env1 ())) halt)))
+                 (term 5))
+(test-equal (re (term ((app (clo (proc (x y) x) env1) ((5 4))) env1 ((env1 ())) halt)))
+                 (term 5))
+(test-equal (re (term ((app (clo (proc (x y) x) env1) ((5))) env1 ((env1 ())) halt)))
+                 (term 5))
 
 ;bind extra args to nil in proc
-(check-expect (tc (term ((app (proc (x y) y) (5)) () () halt))
+(test-equal (re (term ((app (proc (x y) y) (5)) env1 ((env1 ())) halt)))
                   (term nil))
-                  #t)
-(check-expect (tc (term ((app (proc (x y z) z) (5)) () () halt))
+                  
+(test-equal (re (term ((app (proc (x y z) z) (5)) env1 ((env1 ())) halt)))
                   (term nil))
-                  #t)
-(check-expect (tc (term ((app (proc () 4) (5)) () () halt))
+                  
+(test-equal (re (term ((app (proc () 4) (5)) env1 ((env1 ())) halt)))
                   (term 4))
-                  #t)
+                  
 
 ;plus
-(test--> rc-red (term ((+ 5 4) () () halt))
-         (term (9 () () halt)))
-(test-->> rc-red (term ((+ (+ 5 4) (+ 5 3)) () () halt))
-         (term (17 () () halt)))
-
+(test-equal (re (term ((+ 5 4) env1 ((env1 ())) halt)))
+         (term 9))
+(test-equal (re (term ((+ (+ 5 4) (+ 5 3)) env1 ((env1 ())) halt)))
+         (term 17))
 
 
 (test-results)
