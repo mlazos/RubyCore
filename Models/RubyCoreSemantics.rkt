@@ -317,7 +317,6 @@
   [(gen-kont (+ number ... ce e ...) env kont)
    (k (+ number ... hole e ...) env kont)])
   
-
 ;lookup in store
 (define-metafunction ruby-core
   sto-lookup : x sto -> ae
@@ -325,8 +324,6 @@
    ,(if (equal? (term x_s) (term x_1))
         (term ae_1)
         (term (sto-lookup x_s ((x_2 ae_2) ...))))]
-  [(sto-lookup x_s ())
-   ((HERE x_s))])
 
 (test-equal (term (sto-lookup x123 ((x123 5))))
             (term 5))
@@ -608,7 +605,6 @@
 (test-equal (re (term ((do (let t 5) t) env1 ((env1 ((t g123))) (g123 3)) halt)))
          5)
 (test-equal (re (term ((do (let t 5) (let t 6)) env1 ((env1 ((t g123))) (g123 0)) halt)))
-         6)
 
 ;app
 (test-equal (re (term ((app (lam (x) x) (5)) env1 ((env1 ())) halt)))

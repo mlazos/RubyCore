@@ -1,2 +1,0 @@
-U:RDoc::Attr[iI"start_masks:ETI"Rotation#start_masks;TI"R;T:privateo:RDoc::Markup::Document:@parts[o:RDoc::Markup::Paragraph;	[I"`an array (by location) containing a bit mask for how the piece maps at the given location. ;TI"Lif the rotation is invalid at that location the mask will contain false;T:
-@fileI"&benchmark/bm_so_meteor_contest.rb;T:0@omit_headings_from_table_of_contents_below0F@I"Rotation;TcRDoc::NormalClass0
