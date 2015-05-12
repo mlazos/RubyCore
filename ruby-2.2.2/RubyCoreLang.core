@@ -1,1 +1,1 @@
-(lam () (do (let func1 (lam (a c) (app-b func2 (a) (proc () (ret c))))) (let func2 (lam (a) (do (yield (a)) (let a 1)))) (app func1 (1 2))))
+(lam () (do (let func1 (lam (a c) (app-b func2 (a) (proc () (ret c))))) (app func1 (1 2)) (let func2 (lam (a) (do (yield (a)) (let a 1)))) (if true 3 4) (let x (+ 3 4))))

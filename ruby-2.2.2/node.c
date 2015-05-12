@@ -1042,10 +1042,20 @@ static char
 	/*method invocation
 	 * [nd_recv].[nd_mid]([nd_args])*/
 
+	//handle proc or lambda calls
 	if(!strcmp(ID2STR(node->nd_mid), "call")) {
 		out = SCATF(STR("(app "), RTC(node->nd_recv));
 		out = SCATF(out, PADL(RTC(node->nd_args)));
 		return CLOSP(out);
+	}
+
+	//handle plus
+	if(!strcmp(ID2STR(node->nd_mid), "+")) {
+		out = STR("(+ ");
+		out = SCATF(out, RTC(node->nd_recv));
+		char *arr = RTC(node->nd_args);
+		out = SCATF(out, PADL(STR(&arr[1])));
+		return out;
 	}
 	
 	break;
@@ -1073,9 +1083,6 @@ static char
     
 
 	return out;
-
-
-
 
       case NODE_VCALL:
 	/*function call with no argument
@@ -1202,8 +1209,8 @@ static char
 	 * 			ANN("example: nil");
 	 * 				
 	break;*/
-	break;
-      case NODE_TRUE:
+      return STR("nil");
+	  case NODE_TRUE:
 	/*
 	 * 	ANN("true");
 	 * 		ANN("format: true");
