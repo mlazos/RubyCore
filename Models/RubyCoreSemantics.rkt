@@ -10,7 +10,8 @@
       empty
       (e ...)
       (clo func env)
-      nil)
+      nil
+      kont)
   (ce (do e ...)
       (+ e ...)
       (if e e e)
@@ -50,7 +51,7 @@
         (k E env kont) ;normal control point 
         halt) ;base case
   (CF (e env sto kont))
-  (x variable-not-otherwise-mentioned blk))  
+  (x variable-not-otherwise-mentioned blk cc))  
 
 
 (define rc-red
@@ -112,7 +113,7 @@
    ;; handle case where bind exp needs to be evaluated
    (--> ((let x ce) env sto kont)
         (ce env sto kont_new)
-        ;(where env_new ,(gensym))
+        ;(where env_new ,(gensym)) ;; commented out because let's in a do statement should add to do's env
         ;(where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (let x e) env kont))
         let-expr)
@@ -235,12 +236,15 @@
         app-b-lam)
    
    ;all bound arguments with block
-   (--> ((app-b (clo (lam () e_body) env_c) () ae)
+   (--> ((app-b (clo (lam () e_body) env_c) () (clo func env_c2))
          env sto kont)
-        (e_body env_c sto_new (k-ret kont))
+        (e_body env_c sto_new2 kont)
         (where x_new ,(gensym))
+        (where x_new2 ,(gensym))
         (where sto_newenv (add-to-env blk x_new env_c sto))
-        (where sto_new (add-to-sto x_new ae sto_newenv))
+        (where sto_newenv2 (add-to-env cc x_new2 env_c2 sto_newenv)) ; add continuation to block's env
+        (where sto_new (add-to-sto x_new (clo func env_c2) sto_newenv2))
+        (where sto_new2 (add-to-sto x_new2 kont sto_new)) ; add continuation to store
         app-b-lam-no-args)
                                    
    ;do
@@ -252,22 +256,16 @@
    (--> ((do ae) env sto kont)
         (ae env sto kont))
    
-   ;return ------------
-   ;arrived at correct kont
-   (--> ((ret ae) env sto (k-ret kont))
-        (ae env sto kont))
-   ;pop frame
-   (--> ((ret ae) env sto (k E env_k kont))
-        ((ret ae) env sto kont))
-   ;pop frame
-   (--> ((ret ae) env sto (k-do E env_k kont))
-        ((ret ae) env sto kont))
-   ;eval return value
+   ;return
+   (--> ((ret ae) env sto kont)
+        (ae env sto (lookup cc env sto))) ;get current continuation
    (--> ((ret ce) env sto kont)
         (ce env_new sto_new kont_new)
         (where env_new ,(gensym))
         (where sto_new (copy-env env env_new sto))
         (where kont_new (gen-kont (ret ce) env kont)))
+   
+   
    ;yield
    ;evaluate arguments to yield
    (--> ((yield (ae ... ce e ...)) env sto kont)
@@ -719,11 +717,11 @@
 (test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) a)))) (let func2 (lam (a b) (app-b func3 (a) (proc (a) (yield ((+ b a))))))) (let func3 (lam (a) (yield (a 2 3)))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
             (term 3))
 ;multi_block.rb
-(test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) (ret a))))) (let func2 (lam (a b) (do (app-b func3 (a) (proc (a) (ret (+ (yield ((+ b a))) 2)))) b))) (let func3 (lam (a) (yield (a 2 3)))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
-            (term 3))
+(test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) (ret a))))) (let func2 (lam (a b) (do (app-b func3 (a) (proc (a) (ret (+ (yield ((+ (+ b a) 10))) 2)))) (+ b a)))) (let func3 (lam (a) (yield (a 2 3)))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
+            (term 13))
 ;if.rb
-(test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) (ret a))))) (let func2 (lam (a b) (do (app-b func3 (#t) (proc (a) (if a (ret (+ (yield ((+ b 1))) 2)) b))) (+ b 2)))) (let func3 (lam (a) (yield (a 2 3)))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
-            (term 3))
+(test-equal (re (term ((app (lam () (do (let func1 (lam (a b c) (app-b func2 (a b) (proc (a) (ret a))))) (let func2 (lam (a b) (do (app-b func3 (#t) (proc (a) (if a (ret (+ (yield ((+ b 12))) 2)) b))) (+ b 5)))) (let func3 (lam (a) (yield (a 2 3)))) (app func1 (1 2 3)))) ()) env1 ((env1 ())) halt)))
+            (term 14))
                        
                 
                      
